@@ -12,7 +12,11 @@ MVP REQUIREMENTS:
 
 
 WEEK 1: What the User can see/interact with
-- Login
+- Login/Create Account
+    - Password Requirements
+         - Uppercase/Lowercase character
+         - Numbers
+         - Special Characters
 - User Views Account Balance
 - User Deposit and Withdraw
 - User Transfers funds between Accounts
