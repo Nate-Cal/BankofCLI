@@ -5,6 +5,11 @@ public class TheInterface {
         System.out.println("Welcome to the Bank of CLI!");
         System.out.println();
         login();
+
+        System.out.println();
+
+
+
     }
 
 
@@ -18,4 +23,13 @@ public class TheInterface {
             int pin = Integer.parseInt(pinAsString);
         }
     }
+
+    public static void deposit() {
+
+    }
+
+    public static void withdraw() {
+
+    }
+
 }
