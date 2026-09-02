@@ -1,0 +1,21 @@
+import java.util.Scanner;
+
+public class TheInterface {
+    public static void main(String[] args) {
+        System.out.println("Welcome to the Bank of CLI!");
+        System.out.println();
+        login();
+    }
+
+
+    public static void login() {
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.print("What is your Username: ");
+            String name = scanner.nextLine();
+            System.out.println("Hello " + name);
+            System.out.print("Please enter your PIN: ");
+            String pinAsString = scanner.nextLine();
+            int pin = Integer.parseInt(pinAsString);
+        }
+    }
+}
