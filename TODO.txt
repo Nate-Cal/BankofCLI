@@ -1,0 +1,19 @@
+MVP REQUIREMENTS:
+**Secure Access:** Users must be able to register and log in using a unique `Account ID` and `PIN`.
+*   **Balance Management:** Users can check their current account balance at any time.
+*   **The Transaction Engine:**
+    *   `Deposit`: Add funds to an account.
+    *   `Withdraw`: Remove funds (the system must prevent overdrawing!).
+    *   `Transfer`: Move money securely between two different accounts.
+*   **Audit Trail:** Users can view their recent transaction history.
+*   **System Logging:** The application must maintain a log file to track activity. You are required to use:
+    *   `INFO`: To record successful actions (e.g., "User successfully logged in").
+    *   `ERROR`: To record failures or security risks (e.g., "Incorrect PIN entered" or "Database connection lost").
+
+
+WEEK 1: What the User can see/interact with
+- Login
+- User Views Account Balance
+- User Deposit and Withdraw
+
+
