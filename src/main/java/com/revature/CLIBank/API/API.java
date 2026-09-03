@@ -6,13 +6,10 @@ public class API {
     public static void main(String[] args) {
         System.out.println("Welcome to the Bank of CLI!");
         System.out.println();
+
         returningUser();
 
-
-
         System.out.println();
-
-
 
     }
 
@@ -37,22 +34,24 @@ public class API {
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.println("Welcome New User! Please create an account...");
             System.out.print("Create a Username: ");
-            String name = scanner.nextLine();
+            String setUserName = scanner.nextLine();
             System.out.println("Please create a PIN: ");
             System.out.println("PIN must include ...");
-            String pinAsString = scanner.nextLine();
-            int pin = Integer.parseInt(pinAsString);
+            String setPin = scanner.nextLine();
+            int pin = Integer.parseInt(setPin);
         }
     }
 
-    public static void login() {
+    public static void login(/*String userName, int pin*/) {
+        AccountInfo account = new AccountInfo();
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("What is your Username: ");
-            String name = scanner.nextLine();
-            System.out.println("Hello " + name);
+            String getUserName = scanner.nextLine();
+            System.out.println();
+            System.out.println("Hello " + getUserName);
             System.out.print("Please enter your PIN: ");
-            String pinAsString = scanner.nextLine();
-            int pin = Integer.parseInt(pinAsString);
+            String getPin = scanner.nextLine();
+            int pin = Integer.parseInt(getPin);
         }
     }
 
