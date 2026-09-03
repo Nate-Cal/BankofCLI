@@ -12,22 +12,37 @@ MVP REQUIREMENTS:
 
 
 WEEK 1: What the User can see/interact with
-- Login/Create Account
+- Nate: Login/Create Account
+- Mo: Withdraw/Deposit
+- Nick: Transfer
+- Benedict: View Balance
 
-- User Views Account Balance
-- User Deposit and Withdraw
-- User Transfers funds between Accounts
-    - User can select Accounts
+- Login/Create Account:
+    -password requirements
+        - Uppercase/Lowercase character
+        - at least one number
+        - minimum of eight characters
+        - at least one special characters
+
+- ViewBalance:
+    - User Deposit and Withdraw
+    - User Transfers funds between Accounts
+        - User can select Accounts
+
+- Withdraw/Deposit
+    - cannot go below zero
+
+- Transfer
+    - money cannot "vanish"
+    - check transferable funds exist
+    - cannot go below zero
+    - overdraft rules?
+
+
 
 Week 2: What the user can or cannot do:
-- Authentication
-    - Password Requirements
-         - Uppercase/Lowercase character
-         - Numbers
-         - Special Characters
-- Banking Logic (Overdrafting/Nonexistent Funds)
-    - Checking that transferable funds exist
-    - Cannot go below 0
+
+
 
 Week 3: Storing User Account Info
 
