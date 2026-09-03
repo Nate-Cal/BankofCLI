@@ -39,11 +39,19 @@ public class API {
             System.out.println("PIN must include ...");
             String setPin = scanner.nextLine();
             int pin = Integer.parseInt(setPin);
+
+            AccountInfo account = new AccountInfo();
+            account.account(setUserName, pin);
+            System.out.println("Account created! Your account credentials are:");
+            System.out.println("Username: " + setUserName);
+            System.out.println("PIN: " + pin);
+            System.out.println("AccountID: " + account.getAccountID());
+
         }
     }
 
     public static void login(/*String userName, int pin*/) {
-        AccountInfo account = new AccountInfo();
+//        AccountInfo account = new AccountInfo();
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("What is your Username: ");
             String getUserName = scanner.nextLine();

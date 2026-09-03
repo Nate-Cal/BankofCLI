@@ -1,15 +1,24 @@
 package com.revature.CLIBank.API;
 
+import java.util.UUID;
+
 public class AccountInfo {
+    private UUID accountID;
     private String userName;
     private int pin;
 
+
+
     public boolean account(String userName, int pin) {
+        this.accountID = UUID.randomUUID();
         this.userName = userName;
         this.pin = pin;
         return true;
     }
 
+    public UUID getAccountID() {
+        return accountID;
+    }
     public String getUserName() {
         return userName;
     }
