@@ -1,3 +1,5 @@
+package com.revature.CLIBank.API;
+
 import java.util.Scanner;
 
 public class TheInterface {
