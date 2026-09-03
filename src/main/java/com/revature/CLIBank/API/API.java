@@ -40,13 +40,13 @@ public class API {
             String setPin = scanner.nextLine();
             int pin = Integer.parseInt(setPin);
 
+            // For storing Account Information
             AccountInfo account = new AccountInfo();
             account.account(setUserName, pin);
             System.out.println("Account created! Your account credentials are:");
             System.out.println("Username: " + setUserName);
             System.out.println("PIN: " + pin);
             System.out.println("AccountID: " + account.getAccountID());
-
         }
     }
 
@@ -61,6 +61,11 @@ public class API {
             String getPin = scanner.nextLine();
             int pin = Integer.parseInt(getPin);
         }
+
+        /*
+            Waiting to store Account Information
+            Will call account() with store information to check login status
+         */
     }
 
     public static void deposit() {
