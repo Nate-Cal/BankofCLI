@@ -1,3 +1,5 @@
+package com.revature.CLIBank.API;
+
 import java.util.Scanner;
 
 public class TheInterface {
@@ -30,6 +32,21 @@ public class TheInterface {
 
     public static void withdraw() {
 
+    }
+
+    // Benedict
+    public static void viewBalance(double balance) {
+        System.out.printf("Current Balance: $%.2f%n", balance);
+    }
+
+    // Benedict
+    public static String changeAccount(Scanner scanner) {
+        System.out.print("Enter the Account ID you would like to view: ");
+        String accountId = scanner.nextLine();
+
+        System.out.println("Selected Account ID: " + accountId);
+
+        return accountId;
     }
 
 }
