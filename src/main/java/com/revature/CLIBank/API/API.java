@@ -64,7 +64,7 @@ public class API {
 
         /*
             Waiting to store Account Information
-            Will call account() with store information to check login status
+            Will call account() with stored information to check login status
          */
     }
 
