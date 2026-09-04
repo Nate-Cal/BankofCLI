@@ -1,5 +1,7 @@
 package com.revature.CLIBank.API;
 
+import com.revature.CLIBank.BusinessLogic.AccountInfo;
+
 import java.util.Scanner;
 
 public class API {

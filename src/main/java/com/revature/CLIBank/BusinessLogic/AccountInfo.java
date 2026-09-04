@@ -1,4 +1,4 @@
-package com.revature.CLIBank.API;
+package com.revature.CLIBank.BusinessLogic;
 
 import java.util.UUID;
 
