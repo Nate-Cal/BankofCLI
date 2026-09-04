@@ -26,12 +26,18 @@ public class TheInterface {
         }
     }
 
-    public static void deposit() {
+    public static boolean deposit() {
 
     }
 
-    public static void withdraw() {
+    public static boolean withdraw() {
 
+    }
+
+    public static boolean transfer(String source, String dest, String amount) {
+
+
+        return true;
     }
 
 }
