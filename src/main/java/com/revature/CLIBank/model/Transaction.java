@@ -12,7 +12,7 @@ public class Transaction {
     private LocalDateTime timestamp;
 
     public Transaction(UUID sourceAccountId, UUID destinationAccountId, TransactionType type, double amount) {
-        this.transactionId = UUID.randomUUID();
+        this.transactionId = UUID.randomUUID(); 
         this.sourceAccountId = sourceAccountId;
         this.destinationAccountId = destinationAccountId;
         this.type = type;
