@@ -3,6 +3,10 @@ package com.revature.CLIBank.model;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Transaction for a deposit, withdrawal, or transfer.
+ * Maps to the Transactions table
+ */
 public class Transaction {
     private UUID transactionId;
     private UUID sourceAccountId;
@@ -11,6 +15,15 @@ public class Transaction {
     private double amount;
     private LocalDateTime timestamp;
 
+    /**
+     * Creates a new transfer between two accounts.
+     * Generates a unique ID and sets the timestamp to now.
+     *
+     * @param sourceAccountId account money leaves
+     * @param destinationAccountId account money enters
+     * @param type should be transfer
+     * @param amount amount moved
+     */
     public Transaction(UUID sourceAccountId, UUID destinationAccountId, TransactionType type, double amount) {
         this.transactionId = UUID.randomUUID(); 
         this.sourceAccountId = sourceAccountId;
@@ -20,6 +33,13 @@ public class Transaction {
         this.timestamp = LocalDateTime.now();
     }
 
+    /**
+     * Creates a new deposit or withdrawal on a single account.
+     * Generates a unique ID, sets destination and timestamps now.
+     * @param sourceAccountId account being deposited to or withdrawn from
+     * @param type Type of transaction
+     * @param amount amount moved
+     */
     public Transaction(UUID sourceAccountId, TransactionType type, double amount) {
         this.transactionId = UUID.randomUUID();
         this.sourceAccountId = sourceAccountId;
@@ -29,6 +49,15 @@ public class Transaction {
         this.timestamp = LocalDateTime.now();
     }
 
+    /**
+     * Rebuilds a transaction from an existing database row.
+     * @param transactionId the ID already stored in Transactions
+     * @param sourceAccountId account money left
+     * @param destinationAccountId account money entered
+     * @param type deposit, withdrawal, or transfer
+     * @param amount amount moved
+     * @param timestamp when the transaction occurred
+     */
     public Transaction(UUID transactionId, UUID sourceAccountId, UUID destinationAccountId, TransactionType type, double amount, LocalDateTime timestamp) {
         this.transactionId = transactionId;
         this.sourceAccountId = sourceAccountId;
@@ -87,5 +116,6 @@ public class Transaction {
     }     
  
 }
+
 
 
