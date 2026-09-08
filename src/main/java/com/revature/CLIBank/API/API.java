@@ -103,6 +103,23 @@ public class API {
         } else {
             return false;
         }
+    // Benedict
+    public static void viewBalance(double balance) {
+        System.out.printf("Current Balance: $%.2f%n", balance);
+    }
+
+    // Benedict
+    public static String changeAccount(Scanner scanner) {
+        System.out.print("Enter the Account ID you would like to view: ");
+        String accountId = scanner.nextLine();
+
+        System.out.println("Selected Account ID: " + accountId);
+
+        return accountId;
+    }
+
+    public static void transfer() {
+
     }
     */
 }
