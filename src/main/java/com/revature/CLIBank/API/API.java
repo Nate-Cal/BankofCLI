@@ -1,6 +1,6 @@
 package com.revature.CLIBank.API;
 
-import com.revature.CLIBank.BusinessLogic.AccountInfo;
+import com.revature.CLIBank.BusinessLogic.*;
 
 import java.util.Scanner;
 
@@ -78,6 +78,31 @@ public class API {
 
     }
 
+    /**
+     * Skeleton implementation of the bank transfer method. Replace immediately.
+     * @author Nicholas DiGirolamo
+     * @param dest, a string holding the account UUID
+     * @param amount, a nonnegative fixed-point number
+     * @return The successfulness of the transfer.
+     */
+    /*
+    public static boolean transfer(String dest, Number amount) {
+        BusinessLogic.Account concreteDest = BusinessLogic.getAccount(dest);
+
+        if(concreteDest == null) return false;
+
+        if(BusinessLogic.subBal(this.selfAcct, amount)) {
+            if(BusinessLogic.addBal(concreteDest, amount)) {
+                return true;
+            } else {
+                // Return the funds to the account
+                BusinessLogic.addBal(this.selfAcct, amount);
+                BusinessLogic.sendMail("Transaction failed.");
+                return false;
+            }
+        } else {
+            return false;
+        }
     // Benedict
     public static void viewBalance(double balance) {
         System.out.printf("Current Balance: $%.2f%n", balance);
@@ -96,5 +121,5 @@ public class API {
     public static void transfer() {
 
     }
-
+    */
 }
