@@ -1,6 +1,7 @@
 package com.revature.CLIBank.Db;
 
 import java.sql.*;
+import java.time.format.DateTimeFormatter;
 
 public class BankDb {
     private Connection con;
@@ -112,7 +113,7 @@ public class BankDb {
         return "";
     }
 
-    public String checkBalance(String acct) {
+    public String getBalance(String acct) {
         ResultSet rs;
         StringBuilder output = new StringBuilder();
         String sql = """
@@ -142,23 +143,22 @@ public class BankDb {
      * @author Nicholas DiGirolamo
      * @param src, a String of the source bank account
      * @param dest, a String of the recipient bank account
-     * @param amount, a String denoting a dollar amount. No negatives.
-     * @param sign, TRUE if a deposit, FALSE if a withdrawal.
+     * @param amount, a String denoting a dollar amount. No negatives. This
+     *                should be the <i>final</i> balance following the transaction.
      * @return The success of the change in balance.
      */
-    public boolean changeAmt(String src, String dest, String amount, boolean sign) {
-        String signedAmt = !sign ? "-" + amount : amount;
+    public boolean postTransaction(String src, String dest, String amount) {
         ResultSet rs;
         String sql = """
                 UPDATE Accounts SET balance = ? WHERE uuid = ? ;
                 """;
         String transactSql = """
-                INSERT INTO TRANSACTIONS Values ( ? , ? , ? );
+                INSERT INTO TRANSACTIONS Values ( ? , ?,  ? , ? );
                 """;
         try(PreparedStatement stmt = this.con.prepareStatement(sql)) {
             stmt.setString(1, src);
             stmt.setString(2, dest);
-            stmt.setString(3, signedAmt);
+            stmt.setString(3, amount);
             stmt.executeQuery();
         } catch(SQLException e) {
             return false;
@@ -167,8 +167,8 @@ public class BankDb {
         try(PreparedStatement stmt = this.con.prepareStatement(transactSql)) {
             stmt.setString(1, src);
             stmt.setString(2, dest);
-            stmt.setString(3, signedAmt);
-            stmt.setString(4, "1970-01-01T00:00:00+00:00");
+            stmt.setString(3, amount);
+            stmt.setString(4, DateTimeFormatter.ISO_INSTANT.toString());
             stmt.executeQuery();
         } catch(SQLException e) {
             // pass
