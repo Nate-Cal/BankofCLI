@@ -5,6 +5,7 @@ import com.revature.CLIBank.BusinessLogic.*;
 import java.util.Scanner;
 
 public class API {
+
     public static void main(String[] args) {
         System.out.println("Welcome to the Bank of CLI!");
         System.out.println();
@@ -35,15 +36,35 @@ public class API {
     public static void signUp() {
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.println("Welcome New User! Please create an account...");
-            System.out.print("Create a Username: ");
-            String setUserName = scanner.nextLine();
-            System.out.println("Please create a PIN: ");
-            System.out.println("PIN must include ...");
-            String setPassWord = scanner.nextLine();
+            AccountInfo account = new AccountInfo();
+            String setUserName;
+            boolean validUserName;
+            do {
+                System.out.print("Create a Username: ");
+                setUserName = scanner.nextLine();
+                validUserName = AccountValidation.isUserNameValid(setUserName);
+
+                if (!validUserName) {
+                    AccountValidation.userNameInvalid();
+                }
+            } while (!validUserName);
+
+            String setPassWord;
+            boolean validPassword;
+            do {
+                System.out.println("Please create a Password: ");
+                setPassWord = scanner.nextLine();
+                validPassword = AccountValidation.isPassWordValid(setPassWord);
+
+                if (!validPassword) {
+                    AccountValidation.passWordInvalid();
+                }
+            } while (!validPassword);
+
 
 
             // For storing Account Information
-            AccountInfo account = new AccountInfo();
+
             account.account(setUserName, setPassWord);
             System.out.println("Account created! Your account credentials are:");
             System.out.println("Username: " + setUserName);
