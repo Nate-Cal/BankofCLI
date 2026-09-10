@@ -39,15 +39,15 @@ public class API {
             String setUserName = scanner.nextLine();
             System.out.println("Please create a PIN: ");
             System.out.println("PIN must include ...");
-            String setPin = scanner.nextLine();
-            int pin = Integer.parseInt(setPin);
+            String setPassWord = scanner.nextLine();
+
 
             // For storing Account Information
             AccountInfo account = new AccountInfo();
-            account.account(setUserName, pin);
+            account.account(setUserName, setPassWord);
             System.out.println("Account created! Your account credentials are:");
             System.out.println("Username: " + setUserName);
-            System.out.println("PIN: " + pin);
+            System.out.println("Password " + setPassWord);
             System.out.println("AccountID: " + account.getAccountID());
         }
     }
@@ -59,9 +59,9 @@ public class API {
             String getUserName = scanner.nextLine();
             System.out.println();
             System.out.println("Hello " + getUserName);
-            System.out.print("Please enter your PIN: ");
-            String getPin = scanner.nextLine();
-            int pin = Integer.parseInt(getPin);
+            System.out.print("Please enter your Password: ");
+            String getPassWord = scanner.nextLine();
+
         }
 
         /*
