@@ -5,20 +5,18 @@ import java.util.UUID;
 public class AccountInfo {
     private UUID accountID;
     private String userName;
-    private int pin;
+    private String passWord;
 
-
-
-    public boolean account(String userName, int pin) {
+    public void account(String userName, String passWord) {
         this.accountID = UUID.randomUUID();
         this.userName = userName;
-        this.pin = pin;
-        return true;
+        this.passWord = passWord;
     }
 
     public UUID getAccountID() {
         return accountID;
     }
+
     public String getUserName() {
         return userName;
     }
@@ -27,11 +25,21 @@ public class AccountInfo {
         this.userName = userName;
     }
 
-    public int getPin() {
-        return pin;
+    public String getPassWord() {
+        return passWord;
     }
 
-    public void setPin(int pin) {
-        this.pin = pin;
+    public void setPassWord(String passWord) {
+        this.passWord = passWord;
+    }
+
+    @Override
+    public String toString() {
+        return "AccountInfo{" +
+                "accountID=" + accountID +
+                ", userName='" + userName + '\'' +
+                ", passWord='" + passWord + '\'' +
+                '}';
     }
 }
+
