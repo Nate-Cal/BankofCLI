@@ -62,10 +62,15 @@ BankOfCLI does not give credit.
 
 ## SQL tables
 
+### Users
+```sql
+CREATE TABLE Owner (id PRIMARY KEY, name TEXT);
+```
+
 ### Accounts 
 Schema:
 ```sql
-CREATE TABLE Accounts (acct PRIMARY KEY, pin VARCHAR(4), opened DATE,  type FOREIGN KEY, balance DECIMAL(10, 5), frozen BOOLEAN);  
+CREATE TABLE Accounts (acct PRIMARY KEY, owner FOREIGN KEY, opened DATE, type FOREIGN KEY, balance DECIMAL(10, 5), frozen BOOLEAN);  
 ```
 
 ### Transactions
@@ -73,7 +78,7 @@ BankOfCLI uses positive differences to signify deposits, and negative
 differences to signify withdrawls. 
 
 ```sql
-CREATE TABLE Transactions (acct FOREIGN KEY, difference DECIMAL(10, 5), whom TEXT, time DATE);
+CREATE TABLE Transactions (acct FOREIGN KEY, difference DECIMAL(10, 5), whom TEXT, moment DATE);
 ```
 
 ### AcctTypes
