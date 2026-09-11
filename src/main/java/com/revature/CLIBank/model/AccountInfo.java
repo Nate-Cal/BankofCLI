@@ -6,6 +6,9 @@ public class AccountInfo {
     private UUID accountID;
     private String userName;
     private String passWord;
+    private AccountType accountType;
+    private double balance;
+    private boolean frozen;
 
     public void account(String userName, String passWord) {
         this.accountID = UUID.randomUUID();
