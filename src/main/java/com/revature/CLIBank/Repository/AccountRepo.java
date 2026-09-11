@@ -1,6 +1,5 @@
 package com.revature.CLIBank.Repository;
 
-import com.revature.CLIBank.BusinessLogic.AccountInfo;
 import com.revature.CLIBank.Utility.ConnectionFactory;
 import com.revature.CLIBank.model.*;
 import java.time.LocalDateTime;
@@ -41,8 +40,8 @@ public class AccountRepo {
                 CREATE TABLE IF NOT EXISTS Accounts (
                     accountID TEXT PRIMARY KEY,
                     userID TEXT NOT NULL,
-                    accountType TEXT NOT NULL ,
-                    pin INTEGER NOT NULL,
+                    passWord TEXT NOT NULL,
+                    accountType TEXT NOT NULL,
                     balance REAL NOT NULL DEFAULT 0.0,
                     frozen INTEGER NOT NULL DEFAULT 0,
                     FOREIGN KEY (userID) REFERENCES Owners(userID)
@@ -101,7 +100,7 @@ public class AccountRepo {
 
     /**
      * Method designed to insert an User into the table
-     * It will take an User object
+     * It will take an user object
      */
     public void insertUser(User user) {
         String query = "INSERT INTO Owners (userID, name, age) VALUES (?, ?, ?)";
@@ -121,23 +120,22 @@ public class AccountRepo {
     }
 
     /** 
-     * Method designed to insert an account into the table
-     * It will take an account object
+     * Method designed to insert an account into the table in the database
+     * It will take an Accountinfo object
      */
-    public void insertAccount(Account account) {
+    public void insertAccount(AccountInfo account) {
         String query = """
-            INSERT INTO Accounts (accountID, userID, accountType, pin, balance, frozen)
+            INSERT INTO Accounts (accountID, userID, passWord, accountType, balance, frozen)
             VALUES (?, ?, ?, ?, ?, ?)
             """;
-
             try (
                 Connection connection = ConnectionFactory.getAutoCommitConnect();
                 PreparedStatement ps = connection.prepareStatement(query);
             ) {
                 ps.setString(1, account.getAccountID().toString());
                 ps.setString(2, account.getUserID().toString());
-                ps.setString(3, account.getAccountType().name());
-                ps.setInt(4, account.getPin());
+                ps.setString(3, account.getPassWord());
+                ps.setString(4, account.getAccountType().name());
                 ps.setDouble(5, account.getBalance());
                 ps.setInt(6, account.isFrozen()? 1 : 0);
                 ps.executeUpdate();
@@ -154,8 +152,7 @@ public class AccountRepo {
      */
     public void insertTransaction(Transaction transaction) {
         String query = """
-            INSERT INTO Transactions
-            (transactionID, sourceAccountId, destinationAccountId, type, amount, timestamp)
+            INSERT INTO Transactions (transactionID, sourceAccountId, destinationAccountId, type, amount, timestamp)
             VALUES (?, ?, ?, ?, ?, ?)
             """;
         
@@ -195,15 +192,16 @@ public class AccountRepo {
     }
 
     /**
-     * Method to read from the ResultSet and create the Account object
-     * It will return an Account object
+     * Method to read from the ResultSet and create the AccountInfo object
+     * It will return an AccountInfo object
      */
-    private Account mapAccount(ResultSet rs) throws SQLException {
-        return new Account(
+    private AccountInfo mapAccount(ResultSet rs) throws SQLException {
+        String ownerId = rs.getString("userID");
+        return new AccountInfo(
             UUID.fromString(rs.getString("accountID")),
-            UUID.fromString(rs.getString("userID")),
+            ownerId == null ? null : UUID.fromString(ownerId),
+            rs.getString("passWord"),
             AccountType.valueOf(rs.getString("accountType")),
-            rs.getInt("pin"),
             rs.getDouble("balance"),
             rs.getInt("frozen") != 0
         );
@@ -244,7 +242,7 @@ public class AccountRepo {
             }
 
         } catch (SQLException e) {
-            System.out.println(e.getStackTrace());
+            e.printStackTrace();
         }
 
         return null;
@@ -254,9 +252,9 @@ public class AccountRepo {
     /** 
      * Method to find an account by ID
      * Return null if the record does not exists
-     * Return the account object if it finds it
+     * Return the AccountInfo object if it finds it
      */
-    public Account findAccountById(UUID accountID) {
+    public AccountInfo findAccountById(UUID accountID) {
         String query = "SELECT * FROM Accounts WHERE accountID = ?";
 
         try (
@@ -271,19 +269,20 @@ public class AccountRepo {
             }
 
         } catch (SQLException e) {
-            e.getStackTrace();
+            e.printStackTrace();
         }
 
         return null;
     }
 
-    /** 
-     * Method to find the accounts of an user
-     * Will return an arraylist of account objects
+    /**
+     * Method to find every account owned by a user
+     * Return an empty list if the user has no accounts
+     * Return a list of AccountInfo objects if it finds them
      */
-    public List<Account> findAccountsByUserId(UUID userID) {
+    public List<AccountInfo> findAccountsByUserId(UUID userID) {
         String query = "SELECT * FROM Accounts WHERE userID = ?";
-        List<Account> accounts = new ArrayList<>();
+        List<AccountInfo> accounts = new ArrayList<>();
 
         try (
             Connection connection = ConnectionFactory.getAutoCommitConnect();
@@ -291,20 +290,21 @@ public class AccountRepo {
         ) {
             ps.setString(1, userID.toString());
             ResultSet rs = ps.executeQuery();
-
             while (rs.next()) {
                 accounts.add(mapAccount(rs));
             }
+
         } catch (SQLException e) {
-            e.getStackTrace();
+            e.printStackTrace();
         }
+
         return accounts;
     }
 
 
     /** 
      * Method to find the transactions by account ID
-     * Return an arraylist of transaction objects
+     * Return a list of transaction objects
      */
     public List<Transaction> findTransactionsByAccountId(UUID accountID) {
         String query = """
@@ -326,7 +326,7 @@ public class AccountRepo {
             }
 
         } catch (SQLException e) {
-            e.getStackTrace();
+            e.printStackTrace();
         }
         return transactions;
     }
@@ -349,87 +349,35 @@ public class AccountRepo {
             ps.setString(3, user.getUserID().toString());
             ps.executeUpdate();
         } catch (SQLException e) {
-            e.getStackTrace();
+            e.printStackTrace();
         }
     }
 
     /**
-     * Method to update an account in the Database
-     * It will recieve an account object
+     * Method to update an account in the database
+     * It will recieve an AccountInfo object
      */
-    public void updateAccount(Account account) {
+    public void updateAccount(AccountInfo account) {
         String query = """
             UPDATE Accounts
-            SET accountType = ?, pin = ?, balance = ?, frozen = ?
+            SET userID = ?, passWord = ?, accountType = ?, balance = ?, frozen = ?
             WHERE accountID = ? 
-                """;
-
+            """;
         try (
             Connection connection = ConnectionFactory.getAutoCommitConnect();
             PreparedStatement ps = connection.prepareStatement(query)
         ) {
-            ps.setString(1, account.getAccountType().name());
-            ps.setInt(2, account.getPin());
-            ps.setDouble(3, account.getBalance());
-            ps.setInt(4, account.isFrozen() ? 1 : 0);
-            ps.setString(5, account.getAccountID().toString());
+            ps.setString(1, account.getUserID().toString());
+            ps.setString(2, account.getPassWord());
+            ps.setString(3, account.getAccountType().name());
+            ps.setDouble(4, account.getBalance());
+            ps.setInt(5, account.isFrozen() ? 1 : 0);
+            ps.setString(6, account.getAccountID().toString());
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            e.getStackTrace();
+            e.printStackTrace();
         }
     }
-
-
-
-
-
-//     public void createAccountRecord(String userName, String passWord) {
-//         String query = "INSERT INTO AccountInfo (userName, passWord) VALUES (?,?)";
-//         try (
-//                 Connection connection = ConnectionFactory.getAutoCommitConnect();
-//                 PreparedStatement ps = connection.prepareStatement(query);
-//         ) {
-//             ps.setString(1, userName);
-//             ps.setString(2, passWord);
-//             int rowsAffected = ps.executeUpdate();
-//             if (rowsAffected == 1) {
-//                 System.out.println("Account Successfully Created");
-//             } else {
-//                 System.out.println("Account was NOT created: rows affected = " + rowsAffected);
-//             }
-//         } catch (SQLException exception) {
-//             exception.printStackTrace();
-//         }
-//     }
-
-//     public void getAccountRecord() {
-//         String sql = "SELECT * FROM AccountInfo";
-//         try (
-//                 Connection connection = ConnectionFactory.getAutoCommitConnect();
-//                 Statement statement = connection.createStatement();
-//                 ResultSet rs = statement.executeQuery(sql)
-//         ) {
-//             while (rs.next()) {
-//                 AccountInfo accountInfo = new AccountInfo();
-//                 String userName = rs.getString("username");
-//                 String passWord = rs.getString("password");
-//                 accountInfo.setUserName(userName);
-//                 accountInfo.setPassWord(passWord);
-//                 System.out.println(accountInfo);
-//             }
-//         } catch (SQLException exception) {
-//             exception.printStackTrace();
-//         }
-//     }
-
-
-//     public static void main(String[] args) {
-// //        AccountRepo repo = new AccountRepo();
-// //
-// //        repo.createAccountRecord("Slagathor", "SLAGATHORRULES");
-// //
-// //        repo.getAccountRecord();
-//     }
 
 }
