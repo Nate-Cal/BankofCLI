@@ -12,10 +12,21 @@ MVP REQUIREMENTS:
 
 
 WEEK 1: What the User can see/interact with
-- Nate: Login/Create Account
-- Mo: Withdraw/Deposit
-- Nick: Transfer
-- Benedict: View Balance
+- Nate: Login/Create Account - done
+- Mo: Withdraw/Deposit - done
+- Nick: Transfer -
+- Benedict: View Balance - done
+
+- Starting Menu:
+    - Create Account
+        -Enter username
+        -Enter password
+    - Log-in
+        -User Logs-in
+            - isValid method
+                - deposit/withdrawal
+                -transfer methods
+
 
 - Login/Create Account:
     -password requirements
@@ -37,6 +48,17 @@ WEEK 1: What the User can see/interact with
     - check transferable funds exist
     - cannot go below zero
     - overdraft rules?
+
+- Starting Menu:
+    - Create Account
+    - Log-in
+        -User Logs-in
+        - call authenticate method
+    - isValid method
+-
+
+- Let's all agree to comment on pull requests approving the merge before any merges
+are formally done.
 
 
 
