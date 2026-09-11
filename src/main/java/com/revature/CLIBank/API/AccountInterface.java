@@ -21,7 +21,7 @@ public class AccountInterface {
         setBalance would be a method in the business layer
         */
         System.out.println(amount + " deposited");
-        System.out.println("New balance: " + newBalance);
+        System.out.println("New balance: " /*+ newBalance*/);
 
     }
 
@@ -38,7 +38,7 @@ public class AccountInterface {
         setBalance would be a method in the business layer
         */
         System.out.println(amount + " withdrawn");
-        System.out.println("New balance: " + newBalance);
+        System.out.println("New balance: " /*+ newBalance*/);
 
     }
 
