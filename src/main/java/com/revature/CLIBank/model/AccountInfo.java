@@ -5,9 +5,9 @@ import java.util.UUID;
 public class AccountInfo {
     private UUID accountID;
     private UUID userID;
-    private String passWord;
+    private int pin;
     private AccountType accountType;
-    private double balance;
+    private long balance;
     private boolean frozen;
 
     public AccountInfo() {}
@@ -16,24 +16,24 @@ public class AccountInfo {
     /** 
      * Constructor to initialize an account
      */
-    public AccountInfo(UUID userID, String passWord) {
+    public AccountInfo(UUID userID, int pin) {
         this.accountID = UUID.randomUUID();
         this.userID = userID;
-        this.passWord = passWord;
+        this.pin = pin;
         this.accountType = AccountType.CHECKING;
-        this.balance = 0.0;
+        this.balance = 0L;
         this.frozen = false;
     }
 
     /** 
      * Constructor to initialize an account with a custom accountType
      */
-    public AccountInfo(UUID userID, String passWord, AccountType accountType) {
+    public AccountInfo(UUID userID, int pin, AccountType accountType) {
         this.accountID = UUID.randomUUID();
         this.userID = userID;
-        this.passWord = passWord;
+        this.pin = pin;
         this.accountType = accountType;
-        this.balance = 0.0;
+        this.balance = 0L;
         this.frozen = false;
     }
 
@@ -41,10 +41,10 @@ public class AccountInfo {
     /** 
      * Constructor to retrieve an account from the database
      */
-    public AccountInfo(UUID accountID, UUID userID, String passWord, AccountType accountType, double balance, boolean frozen) {
+    public AccountInfo(UUID accountID, UUID userID, int pin, AccountType accountType, long balance, boolean frozen) {
         this.accountID = accountID;
         this.userID = userID;
-        this.passWord = passWord;
+        this.pin = pin;
         this.accountType = accountType;
         this.balance = balance;
         this.frozen = frozen;
@@ -66,12 +66,12 @@ public class AccountInfo {
         this.userID = userID;
     }
 
-    public String getPassWord() {
-        return passWord;
+    public int getPin() {
+        return pin;
     }
 
-    public void setPassWord(String passWord) {
-        this.passWord = passWord;
+    public void setPin(int pin) {
+        this.pin = pin;
     }
 
     public AccountType getAccountType() {
@@ -82,11 +82,11 @@ public class AccountInfo {
         this.accountType = accountType;
     }
 
-    public double getBalance() {
+    public long getBalance() {
         return balance;
     }
 
-    public void setBalance(double balance) {
+    public void setBalance(long balance) {
         this.balance = balance;
     }
 
@@ -100,7 +100,7 @@ public class AccountInfo {
 
     @Override
     public String toString() {
-        return "AccountInfo [accountID=" + accountID + ", userID=" + userID + ", passWord=" + passWord + ", accountType=" + accountType + ", balance=" + balance + ", frozen=" + frozen + "]";
+        return "AccountInfo [accountID=" + accountID + ", userID=" + userID + ", pin=" + pin + ", accountType=" + accountType + ", balance=" + balance + ", frozen=" + frozen + "]";
     }
 
 }
