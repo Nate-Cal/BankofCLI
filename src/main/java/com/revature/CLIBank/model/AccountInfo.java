@@ -7,7 +7,7 @@ public class AccountInfo {
     private UUID userID;
     private int pin;
     private AccountType accountType;
-    private double balance;
+    private long balance;
     private boolean frozen;
 
     public AccountInfo() {}
@@ -21,7 +21,7 @@ public class AccountInfo {
         this.userID = userID;
         this.pin = pin;
         this.accountType = AccountType.CHECKING;
-        this.balance = 0.0;
+        this.balance = 0L;
         this.frozen = false;
     }
 
@@ -33,7 +33,7 @@ public class AccountInfo {
         this.userID = userID;
         this.pin = pin;
         this.accountType = accountType;
-        this.balance = 0.0;
+        this.balance = 0L;
         this.frozen = false;
     }
 
@@ -41,7 +41,7 @@ public class AccountInfo {
     /** 
      * Constructor to retrieve an account from the database
      */
-    public AccountInfo(UUID accountID, UUID userID, int pin, AccountType accountType, double balance, boolean frozen) {
+    public AccountInfo(UUID accountID, UUID userID, int pin, AccountType accountType, long balance, boolean frozen) {
         this.accountID = accountID;
         this.userID = userID;
         this.pin = pin;
@@ -82,11 +82,11 @@ public class AccountInfo {
         this.accountType = accountType;
     }
 
-    public double getBalance() {
+    public long getBalance() {
         return balance;
     }
 
-    public void setBalance(double balance) {
+    public void setBalance(long balance) {
         this.balance = balance;
     }
 

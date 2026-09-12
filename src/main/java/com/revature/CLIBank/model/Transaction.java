@@ -12,7 +12,7 @@ public class Transaction {
     private UUID sourceAccountId;
     private UUID destinationAccountId;
     private TransactionType type;
-    private double amount;
+    private long amount;
     private LocalDateTime timestamp;
 
     /**
@@ -20,7 +20,7 @@ public class Transaction {
      * Generates a unique ID and sets the timestamp to now.
      *
      */
-    public Transaction(UUID sourceAccountId, UUID destinationAccountId, TransactionType type, double amount) {
+    public Transaction(UUID sourceAccountId, UUID destinationAccountId, TransactionType type, long amount) {
         this.transactionId = UUID.randomUUID(); 
         this.sourceAccountId = sourceAccountId;
         this.destinationAccountId = destinationAccountId;
@@ -33,7 +33,7 @@ public class Transaction {
      * Creates a new deposit or withdrawal on a single account.
      * Generates a unique ID, sets destination and timestamps now.
      */
-    public Transaction(UUID sourceAccountId, TransactionType type, double amount) {
+    public Transaction(UUID sourceAccountId, TransactionType type, long amount) {
         this.transactionId = UUID.randomUUID();
         this.sourceAccountId = sourceAccountId;
         this.destinationAccountId = null;
@@ -45,7 +45,7 @@ public class Transaction {
     /**
      * Rebuilds a transaction from an existing database row.
      */
-    public Transaction(UUID transactionId, UUID sourceAccountId, UUID destinationAccountId, TransactionType type, double amount, LocalDateTime timestamp) {
+    public Transaction(UUID transactionId, UUID sourceAccountId, UUID destinationAccountId, TransactionType type, long amount, LocalDateTime timestamp) {
         this.transactionId = transactionId;
         this.sourceAccountId = sourceAccountId;
         this.destinationAccountId = destinationAccountId;
@@ -86,11 +86,11 @@ public class Transaction {
         this.type = type;
     }
 
-    public double getAmount() {
+    public long getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(long amount) {
         this.amount = amount;
     }
 
