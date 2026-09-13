@@ -7,7 +7,6 @@ public class BankActions {
 
     //Mo
     public static boolean checkDeposit(AccountInfo accountInfo, BigDecimal amount){
-        //TODO: repository team should provide account lookup using accountID
         return accountInfo.getAccountID() != null
                 && accountInfo.isStatus()
                 && amount != null
@@ -24,8 +23,15 @@ public class BankActions {
 
     }
 
-   /* public boolean checkTransfer(UUID accountIDone, UUID accountIDtwo, BigDecimal amount ){
-        checkWithdrawal(accountIDone, amount)
+   public static boolean checkTransfer(AccountInfo sendingAccount, AccountInfo receivingAccount, BigDecimal amount ){
+        return sendingAccount != null
+                && receivingAccount != null
+                && sendingAccount.isStatus()
+                && receivingAccount.isStatus()
+                && !sendingAccount.getAccountID().equals(receivingAccount.getAccountID())
+                && amount != null
+                && amount.compareTo(BigDecimal.ZERO) > 0
+                && sendingAccount.getBalance().compareTo(amount) >= 0;
     }
-    */
+
 }

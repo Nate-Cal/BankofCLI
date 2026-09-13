@@ -45,50 +45,28 @@ public class AccountInterface {
     }
 
     //Mo
-    public static void askTransfer(){
-        System.out.println("Which account would you like to transfer from?");
+    public static void askTransfer(AccountInfo sendingAccount, AccountInfo receivingAccount) {
+        System.out.println("Enter the transfer amount.");
         Scanner scanner = new Scanner(System.in);
-        String firstAccount = scanner.nextLine();
-        UUID firstAccountID = UUID.fromString(firstAccount);
-        System.out.println("Which account would you like to transfer to?");
-        String secondAccount = scanner.nextLine();
-        UUID secondAccountID = UUID.fromString(secondAccount);
-        BankTransactions.transfer(firstAccountID, secondAccountID);
-    }
+        BigDecimal amount = scanner.nextBigDecimal();
 
-    //Mo
-    public static void deposit(UUID accountID) {
-        double balance, newBalance;
-        System.out.println("What amount would you like to deposit?");
-        Scanner scanner = new Scanner(System.in);
-        double amount = scanner.nextDouble();
-        /*
-        balance = getBalance(accountID);
-        getBalance() would be a method in the business layer
-        newBalance = amount + balance;
-        setBalance(newBalance);
-        setBalance would be a method in the business layer
-        */
-        System.out.println(amount + " deposited");
-        System.out.println("New balance: " /*+ newBalance*/);
+        BigDecimal amountTransferred = BankTransactions.transfer(sendingAccount, receivingAccount, amount);
+        if (amountTransferred.compareTo(BigDecimal.ZERO) > 0) {
+            System.out.println(amount + " transferred from " + sendingAccount.getAccountName());
+            System.out.println(sendingAccount.getAccountName() + " balance:  " + sendingAccount.getBalance());
+            System.out.println(receivingAccount.getAccountName() + " balance:  " + receivingAccount.getBalance());
+
+        }
+        else
+            System.out.println("Transfer failed.");
 
     }
 
-    //Mo
-    public static void withdraw(UUID accountID) {
-        double balance, newBalance;
-        System.out.println("What amount would you like to withdraw?");
-        Scanner scanner = new Scanner(System.in);
-        double amount = scanner.nextDouble();
-        /* balance = getBalance(accountID);
-        getBalance() would be a method in the business layer
-        newBalance                                                                                                          = balance - amount;
-        setBalance(newBalance);
-        setBalance would be a method in the business layer
-        */
-        System.out.println(amount + " withdrawn");
-        System.out.println("New balance: " /*+ newBalance*/);
 
     }
+
+
+
+
 
 }

@@ -38,7 +38,27 @@ public class BankTransactions {
     }
 
     //Mo
-    public static void transfer(UUID accountIDone, UUID accountIDtwo){
+    public static synchronized BigDecimal transfer(AccountInfo sendingAccount, AccountInfo receivingAccount, BigDecimal amount){
+        if(!BankActions.checkTransfer(sendingAccount, receivingAccount, amount)){
+            return BigDecimal.ZERO;
+        }
+
+        // TODO: repo team can provide one shared DB connection/transaction
+        // Connection conn = ConnectionFactory.getConnection();
+        // conn.setAutoCommit(false);
+        // I (Mo) will handle the Atomicity requirement once that happens
+
+
+        BigDecimal balanceOne = sendingAccount.getBalance();
+        BigDecimal balanceTwo = receivingAccount.getBalance();
+
+        sendingAccount.setBalance(balanceOne.subtract(amount));
+        receivingAccount.setBalance(balanceTwo.add(amount));
+
+        // if no error, conn.commit(); will go here
+
+        return amount;
+
 
     }
 }
