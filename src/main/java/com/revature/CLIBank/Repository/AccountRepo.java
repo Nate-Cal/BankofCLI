@@ -149,19 +149,29 @@ public class AccountRepo {
     }
 
     /** 
-     * Method designed to insert a transaction into the table
+     * Method to insert a transaction with an auto commit
      * It will take a transaction object
      */
     public void insertTransaction(Transaction transaction) {
+        try(Connection connection = ConnectionFactory.getAutoCommitConnect()) {
+            insertTransaction(connection, transaction);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** 
+     * Method designed to insert a transaction into the table
+     * It will take a transaction object
+     * It will take a connection object 
+     */
+    private void insertTransaction(Connection connection, Transaction transaction) throws SQLException {
         String query = """
             INSERT INTO Transactions (transactionID, sourceAccountId, destinationAccountId, type, amount, timestamp)
             VALUES (?, ?, ?, ?, ?, ?)
             """;
         
-        try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement ps = connection.prepareStatement(query);
-        ) {
+        try (PreparedStatement ps = connection.prepareStatement(query)) {
             ps.setString(1, transaction.getTransactionId().toString());
             ps.setString(2, transaction.getSourceAccountId().toString());
 
@@ -174,10 +184,10 @@ public class AccountRepo {
             ps.setString(4, transaction.getType().name());
             ps.setLong(5, transaction.getAmount());
             ps.setString(6, transaction.getTimestamp().toString());
-            ps.executeUpdate();
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+            if (ps.executeUpdate() != 1) {
+                throw new SQLException("Insert transaction failed");
+            }
         }
     }
 
@@ -387,35 +397,53 @@ public class AccountRepo {
 
     /**
      * Method to take money from one account and insert it into another account
+     * It involves a mannual commit
+     * It will return a boolean between whether the transaction was succesfully made or not
      */
-    // public static void transferMoney(AccountInfo source, AccountInfo dest, long amount) {
-    //     String addSQL = "UPDATE Accounts SET balance = balance + ? WHERE accountID = ?";
-    //     String withdrawSQL = "UPDATE Accounts SET balance = balance - ? WHERE accountID = ?";
+    public boolean transferMoney(AccountInfo source, AccountInfo dest, long amount) {
+        String addSQL = "UPDATE Accounts SET balance = balance + ? WHERE accountID = ?";
+        String withdrawSQL = "UPDATE Accounts SET balance = balance - ? WHERE accountID = ?";
 
-    //     try(Connection connection = ConnectionFactory.getManualCommitConnection()) {
-    //         try(PreparedStatement ps = connection.prepareStatement(addSQL)) {
-    //             ps.setLong(1, amount);
-    //             ps.setString(2, dest.getAccountID().toString());
-    //             int rowCount = ps.executeUpdate();
-    //             if (rowCount != 1){
-    //                 connection.rollback();
-    //                 throw new SQLException("Adding money to account failed");
-    //             }
-    //         }
-    //         try (PreparedStatement ps2 = connection.prepareStatement(withdrawSQL)) {
-    //             ps2.setLong(1, amount);
-    //             ps2.setString(2, source.getAccountID().toString());
-    //             int rowCount = ps2.executeUpdate();
-    //             if(rowCount != 1) {
-    //                 connection.rollback();
-    //                 throw new SQLException("Withdrawing money from account failed");
-    //             }
-    //         }
-    //         connection.commit();
-    //     } catch (SQLException e) {
-    //         e.printStackTrace();
-    //     }
-    // }
+        try (Connection connection = ConnectionFactory.getManualCommitConnection()) {
+            try {
+                try(PreparedStatement ps = connection.prepareStatement(withdrawSQL)) {
+                    ps.setLong(1, amount);
+                    ps.setString(2, source.getAccountID().toString());
+                    if (ps.executeUpdate() != 1) {
+                        throw new SQLException("Withdrawing money from account failed");
+                    }
+                }
+
+                try(PreparedStatement ps2 = connection.prepareStatement(addSQL)) {
+                    ps2.setLong(1, amount);
+                    ps2.setString(2, dest.getAccountID().toString());
+
+                    if(ps2.executeUpdate() != 1) {
+                        throw new SQLException("Adding money to account failed");
+                    }
+                }
+
+                insertTransaction(connection, new Transaction(
+                    source.getAccountID(),
+                    dest.getAccountID(),
+                    TransactionType.TRANSFER,
+                    amount
+                ));
+
+                connection.commit();
+                source.setBalance(source.getBalance() - amount);
+                dest.setBalance(dest.getBalance() + amount);
+                return true;
+            } catch (SQLException e) {
+                connection.rollback();
+                e.printStackTrace();
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
 
 

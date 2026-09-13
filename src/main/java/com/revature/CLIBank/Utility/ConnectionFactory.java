@@ -13,6 +13,7 @@ public class ConnectionFactory {
 
     public static Connection getAutoCommitConnect() throws SQLException {
         Connection connection = DriverManager.getConnection(url);
+        configureForeignKeyEnforcement(connection);
         return connection;
     }
 
