@@ -13,25 +13,27 @@ public class AccountInfo {
     private String passWord;
     //private boolean status = true; //-Mo
     //private String AccountName; //-Mo
-    //TODO: add an attribute for Account Names (e.g checking and savings)
+    //TODO: add an attribute for Account Names (e.g checking and savings) - Mo
 
 
-    //TODO: add an attribute for Account Names (e.g checking and savings)
+    //TODO: add an attribute for Account Names (e.g checking and savings) - Mo
 
-    /*
+   /*
    public String getAccountName() {
         return accountName;
     }
 
-    //TODO: write getAccountName() logic
+    //TODO: write getAccountName() logic - Mo
 
     public void setAccountName(String accountName) {
         this.accountName = accountName;
     }
 
-    //TODO: write setAccountName() logic
+    //TODO: write setAccountName() logic - Mo
 
     */
+
+
 
     private String accountName; //Mo - should be added
 
@@ -51,6 +53,8 @@ public class AccountInfo {
 
 
 
+
+
     public void account(String userName, String passWord) {
         this.accountID = UUID.randomUUID();
         this.userName = userName;
@@ -58,12 +62,12 @@ public class AccountInfo {
     }
 
     //Mo, dummy method
-    public BigDecimal getBalance(){
-        return BigDecimal.ZERO;
+    public long getBalance(){
+        return 0;
     }
 
     //Mo, dummy method
-    public void setBalance(BigDecimal balance){
+    public void setBalance(long balance){
 
     }
 

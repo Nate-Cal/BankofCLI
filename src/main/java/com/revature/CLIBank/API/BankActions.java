@@ -1,37 +1,32 @@
 package com.revature.CLIBank.API;
 import com.revature.CLIBank.BusinessLogic.AccountInfo;
-import java.math.BigDecimal;
-import java.util.UUID;
 
 public class BankActions {
 
     //Mo
-    public static boolean checkDeposit(AccountInfo accountInfo, BigDecimal amount){
+    public static boolean checkDeposit(AccountInfo accountInfo, long amount){
         return accountInfo.getAccountID() != null
                 && accountInfo.isStatus()
-                && amount != null
-                && amount.compareTo(BigDecimal.ZERO) > 0;
+                && amount > 0;
 
     }
-    public static boolean checkWithdraw(AccountInfo accountInfo, BigDecimal amount){
+    public static boolean checkWithdraw(AccountInfo accountInfo, long amount){
         //AccountInfo accountInfo = new AccountInfo(accountID);
         return accountInfo.getAccountID() != null
                 && accountInfo.isStatus()
-                && amount != null
-                && amount.compareTo(BigDecimal.ZERO) > 0
-                && accountInfo.getBalance().compareTo(amount) >= 0;
+                && amount > 0
+                && amount <= accountInfo.getBalance();
 
     }
 
-   public static boolean checkTransfer(AccountInfo sendingAccount, AccountInfo receivingAccount, BigDecimal amount ){
+   public static boolean checkTransfer(AccountInfo sendingAccount, AccountInfo receivingAccount, long amount ){
         return sendingAccount != null
                 && receivingAccount != null
                 && sendingAccount.isStatus()
                 && receivingAccount.isStatus()
                 && !sendingAccount.getAccountID().equals(receivingAccount.getAccountID())
-                && amount != null
-                && amount.compareTo(BigDecimal.ZERO) > 0
-                && sendingAccount.getBalance().compareTo(amount) >= 0;
+                && amount > 0
+                && sendingAccount.getBalance() >= amount;
     }
 
 }
