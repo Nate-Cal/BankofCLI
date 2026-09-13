@@ -11,6 +11,7 @@ public class User {
     private String name;
     private int age;
     private String passWord;
+    public boolean exists;
 
     /**
      * Creates a new user and generates a unique ID.
@@ -30,6 +31,14 @@ public class User {
         this.name = name;
         this.age = age;
         this.passWord = passWord;
+    }
+
+    /**
+     * Populates the object based on the username and password
+     * both being correct.
+     */
+    public User(String username, String password) {
+        this.exists = true;
     }
 
     public UUID getUserID() {

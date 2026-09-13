@@ -1,102 +1,71 @@
 package com.revature.CLIBank.API;
 
 import com.revature.CLIBank.BusinessLogic.*;
-
-import java.util.Scanner;
+import com.revature.CLIBank.Repository.AccountRepo;
+import com.revature.CLIBank.model.*;
 
 public class API {
 
-    public static void main(String[] args) {
-        System.out.println("Welcome to the Bank of CLI!");
-        System.out.println();
+    private User user;
+    String result;
 
-        returningUser();
-
-        System.out.println();
-
+    public API() {
+        this.user = null;
+        this.result = null;
     }
 
-    public static void returningUser() {
-        try (Scanner scanner = new Scanner(System.in)) {
-            System.out.print("Are you a returning User? (y/n): ");
-            String yesNo = scanner.nextLine();
-            if (yesNo.equals("y")) {
-                System.out.println();
-                login();
-                return;
-            } if (yesNo.equals("n")) {
-                System.out.println();
-                signUp();
-            } else {
-                System.out.println("Invalid input");
-                returningUser();
-            }
-        }
-    }
-    public static void signUp() {
-        try (Scanner scanner = new Scanner(System.in)) {
-            System.out.println("Welcome New User! Please create an account...");
-            AccountInfo account = new AccountInfo();
-            String setUserName;
-            boolean validUserName;
-            do {
-                System.out.print("Create a Username: ");
-                setUserName = scanner.nextLine();
-                validUserName = AccountValidation.isUserNameValid(setUserName);
+    public boolean register(String username, String password) {
+        boolean unameStat = AccountValidation.isUserNameValid(username);
+        boolean pwStat = AccountValidation.isPassWordValid(password);
 
-                if (!validUserName) {
-                    AccountValidation.userNameInvalid();
-                }
-            } while (!validUserName);
-
-            String setPassWord;
-            boolean validPassword;
-            do {
-                System.out.println("Please create a Password: ");
-                setPassWord = scanner.nextLine();
-                validPassword = AccountValidation.isPassWordValid(setPassWord);
-
-                if (!validPassword) {
-                    AccountValidation.passWordInvalid();
-                }
-            } while (!validPassword);
-
-
-
-            // For storing Account Information
-
-            account.account(setUserName, setPassWord);
-            System.out.println("Account created! Your account credentials are:");
-            System.out.println("Username: " + setUserName);
-            System.out.println("Password " + setPassWord);
-            System.out.println("AccountID: " + account.getAccountID());
-        }
-    }
-
-    public static void login(/*String userName, int pin*/) {
-//        AccountInfo account = new AccountInfo();
-        try (Scanner scanner = new Scanner(System.in)) {
-            System.out.print("What is your Username: ");
-            String getUserName = scanner.nextLine();
-            System.out.println();
-            System.out.println("Hello " + getUserName);
-            System.out.print("Please enter your Password: ");
-            String getPassWord = scanner.nextLine();
-
+        if(unameStat && pwStat) {
+            User tmpUser = new User(username, 0, password);
+            AccountRepo.insertUser(tmpUser);
+        } else {
+            this.result =
+             """
+             Username must include 1 Uppercase, 1 Lowercase, and must be between 8 and 16 characters.
+             Password must include 1 Uppercase, 1 Lowercase, 1 number, 1 special character, and be 16-24 characters.
+             """;
         }
 
-        /*
-            Waiting to store Account Information
-            Will call account() with stored information to check login status
-         */
+        return unameStat && pwStat;
     }
 
-    public static void deposit() {
+    public boolean login(String username, String password) {
+        User stagedUser = new User(username, password);
 
+        if(stagedUser.exists) {
+            this.user = stagedUser;
+        } else {
+            this.result = "Login failed. Try again.";
+        }
+
+        return stagedUser.exists;
     }
 
-    public static void withdraw() {
+    public void deposit(String amount) {
+        String[] parts = amount.split("..");
+        long dollars = Integer.parseInt(parts[0]);
+        long cents = Integer.parseInt(parts[1]);
+        long fund = 100*dollars + cents;
+        /* Call the business layer for the specific accounts */
+    }
 
+    public void withdraw(String amount) {
+        String[] parts = amount.split("..");
+        long dollars = Integer.parseInt(parts[0]);
+        long cents = Integer.parseInt(parts[1]);
+        long fund = 100*dollars + cents;
+        /* Call the business layer for the specific account */
+    }
+
+    public User getUser() {
+        return this.user;
+    }
+
+    public String getResult() {
+        return this.result;
     }
 
     /**
