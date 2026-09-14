@@ -5,15 +5,18 @@ import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.model.*;
 
 import java.util.List;
+import java.util.UUID;
 
 public class API {
 
     private User user;
     private String result;
+    private BankTransactions bankTransactions;
 
     public API() {
         this.user = null;
         this.result = null;
+        this.bankTransactions = new BankTransactions();
     }
 
     public boolean register(String username, String password) {
@@ -47,19 +50,34 @@ public class API {
     }
 
     public void deposit(String acct, String amount) {
+        AccountInfo ai = new AccountInfo(UUID.fromString(acct));
+
         String[] parts = amount.split("..");
-        long dollars = Integer.parseInt(parts[0]);
-        long cents = Integer.parseInt(parts[1]);
+        long dollars = Long.parseLong(parts[0]);
+        long cents = Long.parseLong(parts[1]);
         long fund = 100*dollars + cents;
-        /* Call the business layer for the specific accounts */
+
+        this.bankTransactions.deposit(ai, fund);
     }
 
     public void withdraw(String acct, String amount) {
+        AccountInfo ai = new AccountInfo(UUID.fromString(acct));
+
         String[] parts = amount.split("..");
         long dollars = Integer.parseInt(parts[0]);
         long cents = Integer.parseInt(parts[1]);
         long fund = 100*dollars + cents;
-        /* Call the business layer for the specific account */
+
+        this.bankTransactions.deposit(ai, fund);
+    }
+
+    public void transfer(String src, String dest, String amount) {
+        String[] parts = amount.split("..");
+        AccountInfo srcAcct = new AccountInfo(UUID.fromString(src));
+        AccountInfo destAcct = new AccountInfo(UUID.fromString(dest))
+
+        this.bankTransactions.transfer(srcAcct, destAcct,
+                100*Long.parseLong(parts[0]) + Long.parseLong(parts[1]));
     }
 
     public void getAcctTransactions(String acct, int n) {
