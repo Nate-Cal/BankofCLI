@@ -60,9 +60,9 @@ public class User {
      * Populates the object based on the username and password
      * both being correct.
      */
-    public User(String username, String password) {
-        this.exists = true;
-    }
+//    public User(String username, String password) {
+//        this.exists = true;
+//    }
 
     public UUID getUserID() {
         return userID;

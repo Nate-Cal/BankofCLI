@@ -40,7 +40,7 @@ public class AccountValidation {
      */
 
     public static boolean isPassWordValid (String passWord) {
-        return passWord.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*?/\\\\])[A-Za-z\\d!@#$%^&*?/\\\\]{8,16}$");
+        return passWord.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*?/\\\\])[A-Za-z\\d!@#$%^&*?/\\\\]{16,24}$");
     }
 
     public static void passWordInvalid() {
