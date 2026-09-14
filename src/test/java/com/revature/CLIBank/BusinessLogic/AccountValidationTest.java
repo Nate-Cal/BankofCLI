@@ -13,8 +13,8 @@ public class AccountValidationTest {
 
     @Test
     public void userIDPositive() {
-        String validUserID ="UserIDValid";
-        boolean userIDPositive = AccountValidation.isUserNameValid(validUserID);
+        String validUsername ="UsernameValid";
+        boolean userIDPositive = AccountValidation.isUsernameValid(validUsername);
 
         Assertions.assertTrue(userIDPositive, "Expected UserID to be valid");
     }
@@ -39,10 +39,10 @@ public class AccountValidationTest {
      */
 
     @Test
-    public void passWordPositive() {
+    public void passwordPositive() {
         String validPassword = "ValidPassword$2026";
-        boolean passWordPositive = AccountValidation.isPassWordValid(validPassword);
+        boolean passwordPositive = AccountValidation.isPasswordValid(validPassword);
 
-        Assertions.assertTrue(passWordPositive, "Expected Password to be valid");
+        Assertions.assertTrue(passwordPositive, "Expected Password to be valid");
     }
 }

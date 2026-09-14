@@ -113,7 +113,7 @@ public class AccountRepo {
             ps.setString(1, user.getUserID().toString());
             ps.setString(2, user.getName());
             ps.setInt(3, user.getAge());
-            ps.setString(4, user.getPassWord());
+            ps.setString(4, user.getPassword());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -382,7 +382,7 @@ public class AccountRepo {
 
             ps.setString(1, user.getName());
             ps.setInt(2, user.getAge());
-            ps.setString(3, user.getPassWord());
+            ps.setString(3, user.getPassword());
             ps.setString(4, user.getUserID().toString());
             ps.executeUpdate();
         } catch (SQLException e) {

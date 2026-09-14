@@ -12,28 +12,28 @@ public class User {
     private UUID userID;
     private String name;
     private int age;
-    private String passWord;
+    private String password;
     public boolean exists;
 
     /**
      * Creates a new user and generates a unique ID.
      */
-    public User(String name, int age, String passWord) {
+    public User(String username, int age, String password) {
         this.userID = UUID.randomUUID();
-        this.name = name;
+        this.name = username;
         this.age = age;
-        this.passWord = passWord;
+        this.password = password;
         this.exists = false;
     }
 
     /**
      * Rebuilds a user from an existing database row.
      */
-    public User(UUID userID, String name, int age, String passWord) {
+    public User(UUID userID, String username, int age, String password) {
         this.userID = userID;
-        this.name = name;
+        this.name = username;
         this.age = age;
-        this.passWord = passWord;
+        this.password = password;
         this.exists = true;
     }
 
@@ -47,11 +47,11 @@ public class User {
             this.userID = found.userID;
             this.name = found.name;
             this.age = found.age;
-            this.passWord = found.passWord;
+            this.password = found.password;
             this.exists = true;
         } else {
             this.name = username;
-            this.passWord = password;
+            this.password = password;
             this.exists = false;
         }
     }
@@ -89,12 +89,11 @@ public class User {
         this.name = name;
     }
 
-    public String getPassWord() {
-        return passWord;
+    public String getPassword() {
+        return password;
     }
 
-    public void setPassWord(String passWord) {
-        this.passWord = passWord;
+    public void setPassWord(String passWord) { this.password = password;
     }
 
 }
