@@ -16,7 +16,7 @@ public class AccountInterface {
         BankTransactions bankTransactions = new BankTransactions();
         long amountDeposited = bankTransactions.deposit(accountInfo, amount);
         if (amountDeposited > 0) {
-            System.out.println(amountDeposited + "deposited.");
+            System.out.println(amountDeposited + " deposited in " + accountInfo.getAccountType() + " account.");
             System.out.println("New balance: " + accountInfo.getBalance());
         }
         else
@@ -36,7 +36,7 @@ public class AccountInterface {
         BankTransactions bankTransactions = new BankTransactions();
         long amountWithdrawn = bankTransactions.withdraw(accountInfo, amount);
         if (amountWithdrawn > 0) {
-            System.out.println(amount + "withdrawn.");
+            System.out.println(amount + " withdrawn from " + accountInfo.getAccountType() + " account.");
             System.out.println("New Balance: " + accountInfo.getBalance());
         }
         else
@@ -53,9 +53,9 @@ public class AccountInterface {
 
         long amountTransferred = bankTransactions.transfer(sendingAccount, receivingAccount, amount);
         if (amountTransferred > 0) {
-            System.out.println(amount + " transferred from " + sendingAccount.getAccountName());
-            System.out.println(sendingAccount.getAccountName() + " balance:  " + sendingAccount.getBalance());
-            System.out.println(receivingAccount.getAccountName() + " balance:  " + receivingAccount.getBalance());
+            System.out.println(amount + " transferred from " + sendingAccount.getAccountType() + " account ");
+            System.out.println(sendingAccount.getAccountType() + " account balance:  " + sendingAccount.getBalance());
+            System.out.println(receivingAccount.getAccountType() + " account balance:  " + receivingAccount.getBalance());
 
         }
         else

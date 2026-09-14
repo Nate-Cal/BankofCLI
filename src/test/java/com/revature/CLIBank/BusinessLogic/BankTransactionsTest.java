@@ -22,4 +22,8 @@ class BankTransactionsTest {
         assertEquals(50L, result);
         assertEquals(150L, account.getBalance());
     }
+
+    @Test
+    void transfer() {
+    }
 }
