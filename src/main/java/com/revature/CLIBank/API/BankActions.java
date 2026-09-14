@@ -4,13 +4,13 @@ import com.revature.CLIBank.BusinessLogic.AccountInfo;
 public class BankActions {
 
     //Mo
-    public static boolean checkDeposit(AccountInfo accountInfo, long amount){
+    public boolean checkDeposit(AccountInfo accountInfo, long amount){
         return accountInfo.getAccountID() != null
                 && accountInfo.isStatus()
                 && amount > 0;
 
     }
-    public static boolean checkWithdraw(AccountInfo accountInfo, long amount){
+    public boolean checkWithdraw(AccountInfo accountInfo, long amount){
         //AccountInfo accountInfo = new AccountInfo(accountID);
         return accountInfo.getAccountID() != null
                 && accountInfo.isStatus()
@@ -19,7 +19,7 @@ public class BankActions {
 
     }
 
-   public static boolean checkTransfer(AccountInfo sendingAccount, AccountInfo receivingAccount, long amount ){
+   public boolean checkTransfer(AccountInfo sendingAccount, AccountInfo receivingAccount, long amount ){
         return sendingAccount != null
                 && receivingAccount != null
                 && sendingAccount.isStatus()

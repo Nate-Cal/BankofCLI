@@ -5,8 +5,9 @@ import com.revature.CLIBank.API.BankActions;
 
 public class BankTransactions {
     //Mo
-    public static long deposit(AccountInfo accountInfo, long amount) {
-        if (!BankActions.checkDeposit(accountInfo, amount)) {
+    public long deposit(AccountInfo accountInfo, long amount) {
+        BankActions bankActions = new BankActions();
+        if (!bankActions.checkDeposit(accountInfo, amount)) {
             return 0;
         }
         long balance, newBalance;
@@ -22,8 +23,9 @@ public class BankTransactions {
     }
 
     //Mo
-    public static long withdraw(AccountInfo accountInfo, long amount) {
-        if(!BankActions.checkWithdraw(accountInfo, amount)){
+    public long withdraw(AccountInfo accountInfo, long amount) {
+        BankActions bankActions = new BankActions();
+        if(!bankActions.checkWithdraw(accountInfo, amount)){
             return 0;
         }
         long balance, newBalance;
@@ -35,8 +37,9 @@ public class BankTransactions {
     }
 
     //Mo
-    public static synchronized long transfer(AccountInfo sendingAccount, AccountInfo receivingAccount, long amount){
-        if(!BankActions.checkTransfer(sendingAccount, receivingAccount, amount)){
+    public synchronized long transfer(AccountInfo sendingAccount, AccountInfo receivingAccount, long amount){
+        BankActions bankActions = new BankActions();
+        if(!bankActions.checkTransfer(sendingAccount, receivingAccount, amount)){
             return 0;
         }
 
