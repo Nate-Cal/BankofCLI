@@ -25,7 +25,7 @@ public class API {
             this.result =
              """
              Username must include 1 Uppercase, 1 Lowercase, and must be between 8 and 16 characters.
-             Password must include 1 Uppercase, 1 Lowercase, 1 number, 1 special character, and be 8-16 characters.
+             Password must include 1 Uppercase, 1 Lowercase, 1 number, 1 special character, and be 16-24 characters.
              """;
         }
 
