@@ -1,5 +1,7 @@
 package com.revature.CLIBank.model;
 
+import com.revature.CLIBank.Repository.AccountRepo;
+
 import java.util.UUID;
 
 /**
@@ -21,6 +23,7 @@ public class User {
         this.name = name;
         this.age = age;
         this.passWord = passWord;
+        this.exists = false;
     }
 
     /**
@@ -31,6 +34,26 @@ public class User {
         this.name = name;
         this.age = age;
         this.passWord = passWord;
+        this.exists = true;
+    }
+
+    /**
+     * Looks up an existing user by username and password.
+     * Sets exists to true and copies the row if the credentials match.
+     */
+    public User(String username, String password) {
+        User found = new AccountRepo().findUserByNameAndPassword(username, password);
+        if (found != null) {
+            this.userID = found.userID;
+            this.name = found.name;
+            this.age = found.age;
+            this.passWord = found.passWord;
+            this.exists = true;
+        } else {
+            this.name = username;
+            this.passWord = password;
+            this.exists = false;
+        }
     }
 
     /**
