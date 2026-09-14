@@ -1,5 +1,5 @@
 package com.revature.CLIBank.BusinessLogic;
-
+import com.revature.CLIBank.model.AccountInfo;
 import com.revature.CLIBank.API.BankActions;
 
 

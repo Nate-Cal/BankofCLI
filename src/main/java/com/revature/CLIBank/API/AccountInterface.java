@@ -1,9 +1,8 @@
 package com.revature.CLIBank.API;
 
-import com.revature.CLIBank.BusinessLogic.AccountInfo;
+import com.revature.CLIBank.model.AccountInfo;
 import com.revature.CLIBank.BusinessLogic.BankTransactions;
 
-import java.math.BigDecimal;
 import java.util.Scanner ;
 
 
