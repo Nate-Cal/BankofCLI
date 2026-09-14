@@ -10,28 +10,26 @@ public class User {
     private UUID userID;
     private String name;
     private int age;
+    private String passWord;
 
     /**
      * Creates a new user and generates a unique ID.
-     * @param name the owner's name
-     * @param age  the owner's age
      */
-    public User(String name, int age) {
+    public User(String name, int age, String passWord) {
         this.userID = UUID.randomUUID();
         this.name = name;
         this.age = age;
+        this.passWord = passWord;
     }
 
     /**
      * Rebuilds a user from an existing database row.
-     * @param userID the ID already stored in Owners
-     * @param name the owner's name
-     * @param age the owner's age
      */
-    public User(UUID userID, String name, int age) {
+    public User(UUID userID, String name, int age, String passWord) {
         this.userID = userID;
         this.name = name;
         this.age = age;
+        this.passWord = passWord;
     }
 
     public UUID getUserID() {
@@ -59,7 +57,12 @@ public class User {
         this.name = name;
     }
 
+    public String getPassWord() {
+        return passWord;
+    }
 
-    
+    public void setPassWord(String passWord) {
+        this.passWord = passWord;
+    }
 
 }

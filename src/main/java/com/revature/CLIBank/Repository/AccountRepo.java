@@ -17,7 +17,8 @@ public class AccountRepo {
             CREATE TABLE IF NOT EXISTS Owners (
                 userID TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
-                age INTEGER NOT NULL
+                age INTEGER NOT NULL,
+                passWord TEXT NOT NULL
             ); """;
 
         try(
@@ -40,9 +41,9 @@ public class AccountRepo {
                 CREATE TABLE IF NOT EXISTS Accounts (
                     accountID TEXT PRIMARY KEY,
                     userID TEXT NOT NULL,
-                    passWord TEXT NOT NULL,
+                    pin INTEGER NOT NULL,
                     accountType TEXT NOT NULL,
-                    balance REAL NOT NULL DEFAULT 0.0,
+                    balance INTEGER NOT NULL DEFAULT 0,
                     frozen INTEGER NOT NULL DEFAULT 0,
                     FOREIGN KEY (userID) REFERENCES Owners(userID)
                 );
@@ -70,7 +71,7 @@ public class AccountRepo {
                 sourceAccountId TEXT NOT NULL,
                 destinationAccountId TEXT,
                 type TEXT NOT NULL,
-                amount REAL NOT NULL,
+                amount INTEGER NOT NULL,
                 timestamp TEXT NOT NULL,
                 FOREIGN KEY (sourceAccountId) REFERENCES Accounts(accountID),
                 FOREIGN KEY (destinationAccountId) REFERENCES Accounts(accountID)
@@ -103,7 +104,7 @@ public class AccountRepo {
      * It will take an user object
      */
     public void insertUser(User user) {
-        String query = "INSERT INTO Owners (userID, name, age) VALUES (?, ?, ?)";
+        String query = "INSERT INTO Owners (userID, name, age, passWord) VALUES (?, ?, ?, ?)";
         
         try (
             Connection connection = ConnectionFactory.getAutoCommitConnect();
@@ -112,6 +113,7 @@ public class AccountRepo {
             ps.setString(1, user.getUserID().toString());
             ps.setString(2, user.getName());
             ps.setInt(3, user.getAge());
+            ps.setString(4, user.getPassWord());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -125,7 +127,7 @@ public class AccountRepo {
      */
     public void insertAccount(AccountInfo account) {
         String query = """
-            INSERT INTO Accounts (accountID, userID, passWord, accountType, balance, frozen)
+            INSERT INTO Accounts (accountID, userID, pin, accountType, balance, frozen)
             VALUES (?, ?, ?, ?, ?, ?)
             """;
             try (
@@ -134,9 +136,9 @@ public class AccountRepo {
             ) {
                 ps.setString(1, account.getAccountID().toString());
                 ps.setString(2, account.getUserID().toString());
-                ps.setString(3, account.getPassWord());
+                ps.setInt(3, account.getPin());
                 ps.setString(4, account.getAccountType().name());
-                ps.setDouble(5, account.getBalance());
+                ps.setLong(5, account.getBalance());
                 ps.setInt(6, account.isFrozen()? 1 : 0);
                 ps.executeUpdate();
     
@@ -170,7 +172,7 @@ public class AccountRepo {
             }
 
             ps.setString(4, transaction.getType().name());
-            ps.setDouble(5, transaction.getAmount());
+            ps.setLong(5, transaction.getAmount());
             ps.setString(6, transaction.getTimestamp().toString());
             ps.executeUpdate();
 
@@ -187,7 +189,8 @@ public class AccountRepo {
         return new User (
             UUID.fromString(rs.getString("userID")),
             rs.getString("name"),
-            rs.getInt("age")
+            rs.getInt("age"),
+            rs.getString("passWord")
         );
     }
 
@@ -200,9 +203,9 @@ public class AccountRepo {
         return new AccountInfo(
             UUID.fromString(rs.getString("accountID")),
             ownerId == null ? null : UUID.fromString(ownerId),
-            rs.getString("passWord"),
+            rs.getInt("pin"),
             AccountType.valueOf(rs.getString("accountType")),
-            rs.getDouble("balance"),
+            rs.getLong("balance"),
             rs.getInt("frozen") != 0
         );
     }
@@ -217,7 +220,7 @@ public class AccountRepo {
             UUID.fromString(rs.getString("sourceAccountId")),
             rs.getString("destinationAccountId") == null ? null : UUID.fromString(rs.getString("destinationAccountId")),
             TransactionType.valueOf(rs.getString("type")),
-            rs.getDouble("amount"),
+            rs.getLong("amount"),
             LocalDateTime.parse(rs.getString("timestamp"))
         );
     }
@@ -337,7 +340,7 @@ public class AccountRepo {
      * It will take an User object
      */
     public void updateUser(User user) {
-        String query = "UPDATE Owners SET name = ?, age = ? WHERE userID = ?";
+        String query = "UPDATE Owners SET name = ?, age = ?, passWord = ? WHERE userID = ?";
 
         try (
             Connection connection = ConnectionFactory.getAutoCommitConnect();
@@ -346,7 +349,8 @@ public class AccountRepo {
 
             ps.setString(1, user.getName());
             ps.setInt(2, user.getAge());
-            ps.setString(3, user.getUserID().toString());
+            ps.setString(3, user.getPassWord());
+            ps.setString(4, user.getUserID().toString());
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -360,7 +364,7 @@ public class AccountRepo {
     public void updateAccount(AccountInfo account) {
         String query = """
             UPDATE Accounts
-            SET userID = ?, passWord = ?, accountType = ?, balance = ?, frozen = ?
+            SET userID = ?, pin = ?, accountType = ?, balance = ?, frozen = ?
             WHERE accountID = ? 
             """;
         try (
@@ -368,9 +372,9 @@ public class AccountRepo {
             PreparedStatement ps = connection.prepareStatement(query)
         ) {
             ps.setString(1, account.getUserID().toString());
-            ps.setString(2, account.getPassWord());
+            ps.setInt(2, account.getPin());
             ps.setString(3, account.getAccountType().name());
-            ps.setDouble(4, account.getBalance());
+            ps.setLong(4, account.getBalance());
             ps.setInt(5, account.isFrozen() ? 1 : 0);
             ps.setString(6, account.getAccountID().toString());
             ps.executeUpdate();
@@ -379,5 +383,41 @@ public class AccountRepo {
             e.printStackTrace();
         }
     }
+
+
+    /**
+     * Method to take money from one account and insert it into another account
+     */
+    // public static void transferMoney(AccountInfo source, AccountInfo dest, long amount) {
+    //     String addSQL = "UPDATE Accounts SET balance = balance + ? WHERE accountID = ?";
+    //     String withdrawSQL = "UPDATE Accounts SET balance = balance - ? WHERE accountID = ?";
+
+    //     try(Connection connection = ConnectionFactory.getManualCommitConnection()) {
+    //         try(PreparedStatement ps = connection.prepareStatement(addSQL)) {
+    //             ps.setLong(1, amount);
+    //             ps.setString(2, dest.getAccountID().toString());
+    //             int rowCount = ps.executeUpdate();
+    //             if (rowCount != 1){
+    //                 connection.rollback();
+    //                 throw new SQLException("Adding money to account failed");
+    //             }
+    //         }
+    //         try (PreparedStatement ps2 = connection.prepareStatement(withdrawSQL)) {
+    //             ps2.setLong(1, amount);
+    //             ps2.setString(2, source.getAccountID().toString());
+    //             int rowCount = ps2.executeUpdate();
+    //             if(rowCount != 1) {
+    //                 connection.rollback();
+    //                 throw new SQLException("Withdrawing money from account failed");
+    //             }
+    //         }
+    //         connection.commit();
+    //     } catch (SQLException e) {
+    //         e.printStackTrace();
+    //     }
+    // }
+
+
+
 
 }
