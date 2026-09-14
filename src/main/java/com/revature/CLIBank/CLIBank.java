@@ -72,42 +72,45 @@ public class CLIBank {
     private static void exec(List<String> args) {
         String cmd = args.getFirst();
 
-        if(cmd.equalsIgnoreCase("exit") || cmd.equalsIgnoreCase("quit")) {
+        if (cmd.equalsIgnoreCase("exit") || cmd.equalsIgnoreCase("quit")) {
             System.out.println("Goodbye!");
             System.exit(0); /* Normal, planned exit. */
-        } else if(cmd.equalsIgnoreCase("accounts")) {
+        } else if (cmd.equalsIgnoreCase("accounts")) {
             api.getAccts();
-        } else if(cmd.equalsIgnoreCase("deposit")) {
+            System.out.print(api.getResult());
+        } else if (cmd.equalsIgnoreCase("deposit")) {
             try {
                 api.deposit(args.get(1), args.get(2));
-            } catch(Exception e) {
-                if(e instanceof IndexOutOfBoundsException)
+                System.out.print(api.getResult());
+            } catch (Exception e) {
+                if (e instanceof IndexOutOfBoundsException)
                     System.err.println("Syntax error: too few arguments.");
             }
-        } else if(cmd.equalsIgnoreCase("withdraw")) {
+        } else if (cmd.equalsIgnoreCase("withdraw")) {
             try {
                 api.withdraw(args.get(1), args.get(2));
-            } catch(Exception e) {
-                if(e instanceof IndexOutOfBoundsException) {
+            } catch (Exception e) {
+                if (e instanceof IndexOutOfBoundsException) {
                     System.err.println("Syntax error: too few arguments");
                 }
             }
-        } else if(cmd.equalsIgnoreCase("transactions")) {
-            if(args.size() == 1)
+        } else if (cmd.equalsIgnoreCase("transactions")) {
+            if (args.size() == 1) {
                 api.getTransactions();
-            else if(args.size() == 2) {
-                int stagedRows = Integer.parseInt(args.get(1));
-                if(stagedRows <= 1000) {
-                    /* Get stagedRows count of most recent ones */
-                } else {
-                    /* Is actually an account */
-                }
-
-            } else if(args.size() == 3) {
-                /* Get accounts */
+        } else if (args.size() == 3) {
+            int stagedRows = Integer.parseInt(args.get(1));
+            if (stagedRows <= 1000) {
+                api.getAcctTransactions(args.get(1), Integer.parseInt(args.get(2)));
+                System.out.print(api.getResult());
             }
+        } else {
+            System.err.println("Syntax error");
+        }
+
         } else if(cmd.equalsIgnoreCase("help")) {
             System.out.println(helpTxt);
+        } else {
+            System.err.println("Unrecognized command.");
         }
     }
 
