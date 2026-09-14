@@ -261,6 +261,29 @@ public class AccountRepo {
         return null;
     }
 
+    /**
+     * Finds a user by username and password
+     * Returns null if no matching row exists
+     */
+    public User findUserByNameAndPassword(String name, String passWord) {
+        String query = "SELECT * FROM Owners WHERE name = ? AND passWord = ?";
+
+        try (
+            Connection connection = ConnectionFactory.getAutoCommitConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+        ) {
+            ps.setString(1, name);
+            ps.setString(2, passWord);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapUser(rs);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     
     /** 
      * Method to find an account by ID
