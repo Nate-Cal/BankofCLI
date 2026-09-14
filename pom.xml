@@ -13,6 +13,8 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit-version>6.1.3</junit-version>
+        <mockito-version>5.23.0</mockito-version>
     </properties>
 
     <dependencies>
@@ -30,8 +32,10 @@
             <artifactId>logback-classic</artifactId>
             <version>1.5.20</version>
         </dependency>
-        
-      <!-- Source: https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
+
+        <!-- This is the JDBC Dependency -->
+
+        <!-- Source: https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
@@ -39,7 +43,39 @@
             <scope>compile</scope>
         </dependency>
 
+        <!--These dependencies are for testing -->
 
+        <!-- Source: https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit-version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Source: https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit-version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Source: https://mvnrepository.com/artifact/org.mockito/mockito-core -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito-version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Source: https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter -->
+        <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-junit-jupiter</artifactId>
+        <version>${mockito-version}</version>
+        <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
