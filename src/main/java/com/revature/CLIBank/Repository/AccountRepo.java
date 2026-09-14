@@ -343,11 +343,22 @@ public class AccountRepo {
      * Return a list of transaction objects
      */
     public List<Transaction> findTransactionsByAccountId(UUID accountID) {
+        return findTransactionsByAccountId(accountID, -1);
+    }
+
+    /**
+     * Find the most recent transactions by account ID
+     * If limit is greater than 0, only that many rows are returned
+     */
+    public List<Transaction> findTransactionsByAccountId(UUID accountID, int limit) {
         String query = """
             SELECT * FROM Transactions
             WHERE sourceAccountId = ? OR destinationAccountId = ?
             ORDER BY timestamp DESC
         """;
+        if (limit > 0) {
+            query += " LIMIT ?";
+        }
         List<Transaction> transactions = new ArrayList<>();
 
         try (
@@ -356,6 +367,9 @@ public class AccountRepo {
         ) {
             ps.setString(1, accountID.toString());
             ps.setString(2, accountID.toString());
+            if (limit > 0) {
+                ps.setInt(3, limit);
+            }
             ResultSet rs = ps.executeQuery();
             while(rs.next()) {
                 transactions.add(mapTransaction(rs));
