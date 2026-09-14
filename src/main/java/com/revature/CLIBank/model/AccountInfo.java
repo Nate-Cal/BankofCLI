@@ -17,13 +17,9 @@ public class AccountInfo {
     //private String accountName; //-Mo
 
 
-
-
-    public AccountInfo() {}
-
-
     /** 
      * Constructor to initialize an account
+     * It will take an userID and the pin of the account
      */
 
      public AccountInfo(UUID userID, int pin) {
@@ -33,6 +29,21 @@ public class AccountInfo {
          this.accountType = AccountType.CHECKING;
          this.balance = 0L;
          this.frozen = false;
+     }
+
+     /**
+      * Constructor to initialize an account with an account ID
+      */
+     public AccountInfo(UUID accountID) {
+        AccountInfo found = new AccountRepo().findAccountById(accountID);
+        if (found != null) {
+            this.accountID = found.accountID;
+            this.userID = found.userID;
+            this.pin = found.pin;
+            this.accountType = found.accountType;
+            this.balance = found.balance;
+            this.frozen = found.frozen;
+        }
      }
 
      /**
@@ -59,6 +70,7 @@ public class AccountInfo {
         this.balance = balance;
         this.frozen = frozen;
     }
+
 
     public UUID getAccountID() {
         return accountID;
