@@ -7,7 +7,7 @@ import com.revature.CLIBank.model.*;
 public class API {
 
     private User user;
-    String result;
+    private String result;
 
     public API() {
         this.user = null;
@@ -58,6 +58,14 @@ public class API {
         long cents = Integer.parseInt(parts[1]);
         long fund = 100*dollars + cents;
         /* Call the business layer for the specific account */
+    }
+
+    public void getAcctTransactions() {
+
+    }
+
+    public void getAccts() {
+
     }
 
     public User getUser() {
