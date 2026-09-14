@@ -1,6 +1,11 @@
 package com.revature.CLIBank.model;
 
 import java.util.UUID;
+import java.util.Collections;
+import java.util.List;
+
+import com.revature.CLIBank.Repository.AccountRepo;
+
 
 public class AccountInfo {
     private UUID accountID;
@@ -109,19 +114,13 @@ public class AccountInfo {
     }
 
 
-/*
-    public String getAccountName() {
-        return accountName;
+    /**
+     * Returns the most recent transactions for this account, up to numberOfTransactions
+     */
+    public List<Transaction> getTransactions(int numberOfTransactions) {
+        if (this.accountID == null || numberOfTransactions <= 0) {
+            return Collections.emptyList();
+        }
+        return new AccountRepo().findTransactionsByAccountId(this.accountID, numberOfTransactions);
     }
-
-    //TODO: write getAccountName() logic - Mo
-
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
-    }
-
-    //TODO: write setAccountName() logic - Mo
-    */
-
-
 }

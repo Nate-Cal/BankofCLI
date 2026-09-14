@@ -3,6 +3,8 @@ package com.revature.CLIBank.model;
 import com.revature.CLIBank.Repository.AccountRepo;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.Collections;
 
 /**
  * Bank customer who can own one or more accounts.
@@ -56,14 +58,6 @@ public class User {
         }
     }
 
-    /**
-     * Populates the object based on the username and password
-     * both being correct.
-     */
-    public User(String username, String password) {
-        this.exists = true;
-    }
-
     public UUID getUserID() {
         return userID;
     }
@@ -95,6 +89,19 @@ public class User {
 
     public void setPassWord(String passWord) {
         this.passWord = passWord;
+    }
+
+    /**
+     * Method to find the accounts associated with the user
+     * Return null if the user has no accounts
+     * Returns a list of the accounts that the user have
+     */
+    public List<AccountInfo> getAccounts() {
+        if (this.userID == null) {
+            return Collections.emptyList();
+        } else {
+            return new AccountRepo().findAccountsByUserId(this.userID);
+        }
     }
 
 }
