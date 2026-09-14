@@ -9,6 +9,10 @@ public class AccountInfo {
     private AccountType accountType;
     private long balance;
     private boolean frozen;
+    //private String accountName; //-Mo
+
+
+
 
     public AccountInfo() {}
 
@@ -16,18 +20,19 @@ public class AccountInfo {
     /** 
      * Constructor to initialize an account
      */
-    public AccountInfo(UUID userID, int pin) {
-        this.accountID = UUID.randomUUID();
-        this.userID = userID;
-        this.pin = pin;
-        this.accountType = AccountType.CHECKING;
-        this.balance = 0L;
-        this.frozen = false;
-    }
 
-    /** 
-     * Constructor to initialize an account with a custom accountType
-     */
+     public AccountInfo(UUID userID, int pin) {
+         this.accountID = UUID.randomUUID();
+         this.userID = userID;
+         this.pin = pin;
+         this.accountType = AccountType.CHECKING;
+         this.balance = 0L;
+         this.frozen = false;
+     }
+
+     /**
+      * Constructor to initialize an account with a custom accountType
+      */
     public AccountInfo(UUID userID, int pin, AccountType accountType) {
         this.accountID = UUID.randomUUID();
         this.userID = userID;
@@ -102,5 +107,21 @@ public class AccountInfo {
     public String toString() {
         return "AccountInfo [accountID=" + accountID + ", userID=" + userID + ", pin=" + pin + ", accountType=" + accountType + ", balance=" + balance + ", frozen=" + frozen + "]";
     }
+
+
+/*
+    public String getAccountName() {
+        return accountName;
+    }
+
+    //TODO: write getAccountName() logic - Mo
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
+    }
+
+    //TODO: write setAccountName() logic - Mo
+    */
+
 
 }

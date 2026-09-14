@@ -1,28 +1,32 @@
 package com.revature.CLIBank.API;
-
-import java.math.BigDecimal;
-import java.util.UUID;
+import com.revature.CLIBank.model.AccountInfo;
 
 public class BankActions {
 
-    //if there is a maximum deposit amount, that check will go here
-    //AccountInfo needs to a new constructor that accepts the AccountID parameter
-    /*public boolean checkWithdrawal(UUID accountID, BigDecimal amount){
-        // getBalance method needs to be added to the AccountInfo class
-        AccountInfo accountInfo = new AccountInfo(accountID);
-        BigDecimal balance;
-        balance = accountInfo.getBalance(accountID);
-        if(balance.compareTo(amount) >= 0)
-        {
-            return true;
-        } else
-            return false;
-        {
-        }
-    } */
+    //Mo
+    public boolean checkDeposit(AccountInfo accountInfo, long amount){
+        return accountInfo.getAccountID() != null
+                && accountInfo.isFrozen()
+                && amount > 0;
 
-   /* public boolean checkTransfer(UUID accountIDone, UUID accountIDtwo, BigDecimal amount ){
-        checkWithdrawal(accountIDone, amount)
     }
-    */
+    public boolean checkWithdraw(AccountInfo accountInfo, long amount){
+        //AccountInfo accountInfo = new AccountInfo(accountID);
+        return accountInfo.getAccountID() != null
+                && accountInfo.isFrozen()
+                && amount > 0
+                && amount <= accountInfo.getBalance();
+
+    }
+
+   public boolean checkTransfer(AccountInfo sendingAccount, AccountInfo receivingAccount, long amount ){
+        return sendingAccount != null
+                && receivingAccount != null
+                && sendingAccount.isFrozen()
+                && receivingAccount.isFrozen()
+                && !sendingAccount.getAccountID().equals(receivingAccount.getAccountID())
+                && amount > 0
+                && sendingAccount.getBalance() >= amount;
+    }
+
 }
