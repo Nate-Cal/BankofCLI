@@ -103,7 +103,7 @@ public class AccountRepo {
      * Method designed to insert an User into the table
      * It will take an user object
      */
-    public void insertUser(User user) {
+    public static void insertUser(User user) {
         String query = "INSERT INTO Owners (userID, name, age, passWord) VALUES (?, ?, ?, ?)";
         
         try (
@@ -125,7 +125,7 @@ public class AccountRepo {
      * Method designed to insert an account into the table in the database
      * It will take an Accountinfo object
      */
-    public void insertAccount(AccountInfo account) {
+    public static void insertAccount(AccountInfo account) {
         String query = """
             INSERT INTO Accounts (accountID, userID, pin, accountType, balance, frozen)
             VALUES (?, ?, ?, ?, ?, ?)
