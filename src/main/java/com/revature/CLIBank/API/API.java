@@ -4,14 +4,19 @@ import com.revature.CLIBank.BusinessLogic.*;
 import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.model.*;
 
+import java.util.List;
+import java.util.UUID;
+
 public class API {
 
     private User user;
-    String result;
+    private String result;
+    private BankTransactions bankTransactions;
 
     public API() {
         this.user = null;
         this.result = null;
+        this.bankTransactions = new BankTransactions();
     }
 
     public boolean register(String username, String password) {
@@ -44,20 +49,91 @@ public class API {
         return stagedUser.exists;
     }
 
-    public void deposit(String amount) {
+    public void deposit(String acct, String amount) {
+        AccountInfo ai = new AccountInfo(UUID.fromString(acct));
+
         String[] parts = amount.split("..");
-        long dollars = Integer.parseInt(parts[0]);
-        long cents = Integer.parseInt(parts[1]);
+        long dollars = Long.parseLong(parts[0]);
+        long cents = Long.parseLong(parts[1]);
         long fund = 100*dollars + cents;
-        /* Call the business layer for the specific accounts */
+
+        this.bankTransactions.deposit(ai, fund);
     }
 
-    public void withdraw(String amount) {
+    public void withdraw(String acct, String amount) {
+        AccountInfo ai = new AccountInfo(UUID.fromString(acct));
+
         String[] parts = amount.split("..");
         long dollars = Integer.parseInt(parts[0]);
         long cents = Integer.parseInt(parts[1]);
         long fund = 100*dollars + cents;
-        /* Call the business layer for the specific account */
+
+        this.bankTransactions.deposit(ai, fund);
+    }
+
+    public void transfer(String src, String dest, String amount) {
+        String[] parts = amount.split("..");
+        AccountInfo srcAcct = new AccountInfo(UUID.fromString(src));
+        AccountInfo destAcct = new AccountInfo(UUID.fromString(dest))
+
+        this.bankTransactions.transfer(srcAcct, destAcct,
+                100*Long.parseLong(parts[0]) + Long.parseLong(parts[1]));
+    }
+
+    public void getAcctTransactions(String acct, int n) {
+        List<AccountInfo> accounts = this.user.getAccounts();
+        StringBuilder sb = new StringBuilder();
+
+        for(AccountInfo ac : accounts) {
+            if(ac.getAccountID().toString().equals(acct)) {
+                List<Transaction> lt;
+
+                if(n >= 0) lt = ac.getTransactions(n);
+                else lt = ac.getTransactions();
+
+                for(Transaction t : lt) {
+                    sb.append(t.getSourceAccountId());
+                    sb.append(" ");
+                    sb.append(t.getDestinationAccountId());
+                    sb.append(" ");
+                    sb.append(t.getAmount());
+                    sb.append(" ");
+                    sb.append(t.getTimestamp());
+                    sb.append("\n");
+                }
+            }
+        }
+        this.result = sb.toString();
+    }
+
+    public void getTransactions() {
+        List<AccountInfo> accounts = this.user.getAccounts();
+        StringBuilder sb = new StringBuilder();
+
+        for(AccountInfo ai : accounts) {
+            getAcctTransactions(ai.getAccountID().toString(), -1);
+            sb.append(this.result);
+        }
+
+        this.result = sb.toString();
+    }
+
+    public void getAccts() {
+        StringBuilder sb = new StringBuilder();
+        List<AccountInfo> accts = this.user.getAccounts();
+
+        sb.append("Your accounts: ");
+        sb.append(accts.size());
+        sb.append("Account number/Type/Balance\n");
+        for(AccountInfo ac : accts) {
+            sb.append(ac.getAccountID());
+            sb.append(" ");
+            sb.append(ac.getAccountType());
+            sb.append(" ");
+            sb.append(ac.getBalance());
+            sb.append("\n");
+        }
+        this.result = sb.toString();
     }
 
     public User getUser() {
@@ -67,50 +143,4 @@ public class API {
     public String getResult() {
         return this.result;
     }
-
-
-    /**
-     * Skeleton implementation of the bank transfer method. Replace immediately.
-     * @author Nicholas DiGirolamo
-     * @param dest, a string holding the account UUID
-     * @param amount, a nonnegative fixed-point number
-     * @return The successfulness of the transfer.
-     */
-    /*
-    public static boolean transfer(String dest, Number amount) {
-        BusinessLogic.Account concreteDest = BusinessLogic.getAccount(dest);
-
-        if(concreteDest == null) return false;
-
-        if(BusinessLogic.subBal(this.selfAcct, amount)) {
-            if(BusinessLogic.addBal(concreteDest, amount)) {
-                return true;
-            } else {
-                // Return the funds to the account
-                BusinessLogic.addBal(this.selfAcct, amount);
-                BusinessLogic.sendMail("Transaction failed.");
-                return false;
-            }
-        } else {
-            return false;
-        }
-    // Benedict
-    public static void viewBalance(double balance) {
-        System.out.printf("Current Balance: $%.2f%n", balance);
-    }
-
-    // Benedict
-    public static String changeAccount(Scanner scanner) {
-        System.out.print("Enter the Account ID you would like to view: ");
-        String accountId = scanner.nextLine();
-
-        System.out.println("Selected Account ID: " + accountId);
-
-        return accountId;
-    }
-
-    public static void transfer() {
-
-    }
-    */
 }

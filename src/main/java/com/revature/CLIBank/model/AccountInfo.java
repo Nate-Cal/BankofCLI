@@ -135,4 +135,13 @@ public class AccountInfo {
         }
         return new AccountRepo().findTransactionsByAccountId(this.accountID, numberOfTransactions);
     }
+
+    /**
+     * Return all transactions associated with this account.
+     * @author Nicholas DiGirolamo
+     */
+    public List<Transaction> getTransactions() {
+        if(this.accountID == null) return Collections.emptyList();
+        return new AccountRepo().findTransactionsByAccountId(this.accountID);
+    }
 }

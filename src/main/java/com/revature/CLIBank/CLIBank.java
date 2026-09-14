@@ -5,9 +5,9 @@ import com.revature.CLIBank.API.*;
 import java.util.*;
 
 public class CLIBank {
-    private static final String help =
+    private static final String usage =
     """
-    CLIBank [-h] | [batch <command> -u <username> -p <password>]
+    usage CLIBank [-h] | [batch <command> -u <username> -p <password>]
     """;
 
     private static final String prompt = "CLIBank> ";
@@ -21,6 +21,20 @@ public class CLIBank {
    | |_) | (_| | | | |   <  | (_) | |   | |____| |____ _| |_\s
    |____/ \\__,_|_| |_|_|\\_\\  \\___/|_|    \\_____|______|_____|
    """;
+
+    protected static final String helpTxt =
+    """
+    Bank of CLI shell commands:
+    
+    help: Show this help
+    accounts: List your accounts
+    transactions <your account> [optional: n]: List recent transactions
+    deposit <your account> <amount>: Add money
+    withdraw <your account> <amount>: Remove money
+    transfer <your account> <recipient account number> <amount>: Transfer money
+    exit: End your session
+    quit: End your session
+    """;
 
     private static API api;
 
@@ -58,15 +72,45 @@ public class CLIBank {
     private static void exec(List<String> args) {
         String cmd = args.getFirst();
 
-        if(cmd.equalsIgnoreCase("exit")) {
+        if (cmd.equalsIgnoreCase("exit") || cmd.equalsIgnoreCase("quit")) {
             System.out.println("Goodbye!");
             System.exit(0); /* Normal, planned exit. */
-        } else if(cmd.equalsIgnoreCase("accounts")) {
-            /* List accounts */
-        } else if(cmd.equalsIgnoreCase("deposit")) {
-            api.deposit(args.get(1));
-        } else if(cmd.equalsIgnoreCase("withdraw")) {
-            api.withdraw(args.get(1));
+        } else if (cmd.equalsIgnoreCase("accounts")) {
+            api.getAccts();
+            System.out.print(api.getResult());
+        } else if (cmd.equalsIgnoreCase("deposit")) {
+            try {
+                api.deposit(args.get(1), args.get(2));
+                System.out.print(api.getResult());
+            } catch (Exception e) {
+                if (e instanceof IndexOutOfBoundsException)
+                    System.err.println("Syntax error: too few arguments.");
+            }
+        } else if (cmd.equalsIgnoreCase("withdraw")) {
+            try {
+                api.withdraw(args.get(1), args.get(2));
+            } catch (Exception e) {
+                if (e instanceof IndexOutOfBoundsException) {
+                    System.err.println("Syntax error: too few arguments");
+                }
+            }
+        } else if (cmd.equalsIgnoreCase("transactions")) {
+            if (args.size() == 1) {
+                api.getTransactions();
+        } else if (args.size() == 3) {
+            int stagedRows = Integer.parseInt(args.get(1));
+            if (stagedRows <= 1000) {
+                api.getAcctTransactions(args.get(1), Integer.parseInt(args.get(2)));
+                System.out.print(api.getResult());
+            }
+        } else {
+            System.err.println("Syntax error");
+        }
+
+        } else if(cmd.equalsIgnoreCase("help")) {
+            System.out.println(helpTxt);
+        } else {
+            System.err.println("Unrecognized command.");
         }
     }
 
@@ -107,18 +151,15 @@ public class CLIBank {
         }
 
         if(arguments.contains("-h")) {
-            System.out.print(CLIBank.help);
+            System.out.print(CLIBank.usage);
             return;
         }
 
         if(arguments.getFirst().equalsIgnoreCase("batch")) {
-            if(arguments.size() < 5) {
-                System.err.println("Not enough arguments. Exiting.");
-                return;
-            }
-
-            if(!api.login(arguments.get(3), arguments.get(5))) {
-                System.err.println("Failed to log in. Exiting.");
+            try {
+                api.login(arguments.get(3), arguments.get(5));
+            } catch(IndexOutOfBoundsException e) {
+                System.err.println("Syntax error. Exiting.");
                 return;
             }
 
