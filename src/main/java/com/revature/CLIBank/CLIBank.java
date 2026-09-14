@@ -28,10 +28,10 @@ public class CLIBank {
     
     help: Show this help
     accounts: List your accounts
-    transactions <account number> [optional: n]: List recent transactions
-    deposit <account you own> <amount>: Add money
-    withdraw <account you own> <amount>: Remove money
-    transfer <recipient account number> <amount>: Transfer money
+    transactions <your account> [optional: n]: List recent transactions
+    deposit <your account> <amount>: Add money
+    withdraw <your account> <amount>: Remove money
+    transfer <your account> <recipient account number> <amount>: Transfer money
     exit: End your session
     quit: End your session
     """;
@@ -78,11 +78,34 @@ public class CLIBank {
         } else if(cmd.equalsIgnoreCase("accounts")) {
             api.getAccts();
         } else if(cmd.equalsIgnoreCase("deposit")) {
-            api.deposit(args.get(1));
+            try {
+                api.deposit(args.get(1), args.get(2));
+            } catch(Exception e) {
+                if(e instanceof IndexOutOfBoundsException)
+                    System.err.println("Syntax error: too few arguments.");
+            }
         } else if(cmd.equalsIgnoreCase("withdraw")) {
-            api.withdraw(args.get(1));
+            try {
+                api.withdraw(args.get(1), args.get(2));
+            } catch(Exception e) {
+                if(e instanceof IndexOutOfBoundsException) {
+                    System.err.println("Syntax error: too few arguments");
+                }
+            }
         } else if(cmd.equalsIgnoreCase("transactions")) {
-            api.getAcctTransactions();
+            if(args.size() == 1)
+                api.getTransactions();
+            else if(args.size() == 2) {
+                int stagedRows = Integer.parseInt(args.get(1));
+                if(stagedRows <= 1000) {
+                    /* Get stagedRows count of most recent ones */
+                } else {
+                    /* Is actually an account */
+                }
+
+            } else if(args.size() == 3) {
+                /* Get accounts */
+            }
         } else if(cmd.equalsIgnoreCase("help")) {
             System.out.println(helpTxt);
         }
@@ -130,13 +153,10 @@ public class CLIBank {
         }
 
         if(arguments.getFirst().equalsIgnoreCase("batch")) {
-            if(arguments.size() < 5) {
-                System.err.println("Not enough arguments. Exiting.");
-                return;
-            }
-
-            if(!api.login(arguments.get(3), arguments.get(5))) {
-                System.err.println("Failed to log in. Exiting.");
+            try {
+                api.login(arguments.get(3), arguments.get(5));
+            } catch(IndexOutOfBoundsException e) {
+                System.err.println("Syntax error. Exiting.");
                 return;
             }
 

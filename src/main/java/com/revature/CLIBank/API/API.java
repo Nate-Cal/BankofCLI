@@ -44,7 +44,7 @@ public class API {
         return stagedUser.exists;
     }
 
-    public void deposit(String amount) {
+    public void deposit(String acct, String amount) {
         String[] parts = amount.split("..");
         long dollars = Integer.parseInt(parts[0]);
         long cents = Integer.parseInt(parts[1]);
@@ -52,7 +52,7 @@ public class API {
         /* Call the business layer for the specific accounts */
     }
 
-    public void withdraw(String amount) {
+    public void withdraw(String acct, String amount) {
         String[] parts = amount.split("..");
         long dollars = Integer.parseInt(parts[0]);
         long cents = Integer.parseInt(parts[1]);
@@ -60,13 +60,17 @@ public class API {
         /* Call the business layer for the specific account */
     }
 
-    public void getAcctTransactions() {
+    public void getAcctTransactions(String acct) {
 
     }
 
     public void getAccts() {
 
     }
+
+     public void getTransactions() {
+
+     }
 
     public User getUser() {
         return this.user;
