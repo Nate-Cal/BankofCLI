@@ -53,9 +53,9 @@ public class AccountInterface {
 
         long amountTransferred = bankTransactions.transfer(sendingAccount, receivingAccount, amount);
         if (amountTransferred > 0) {
-            System.out.println(amount + " transferred from " + sendingAccount.getAccountName());
-            System.out.println(sendingAccount.getAccountName() + " balance:  " + sendingAccount.getBalance());
-            System.out.println(receivingAccount.getAccountName() + " balance:  " + receivingAccount.getBalance());
+            System.out.println(amount + " transferred from " + sendingAccount.getAccountID());
+            System.out.println(sendingAccount.getAccountID() + " balance:  " + sendingAccount.getBalance());
+            System.out.println(receivingAccount.getAccountID() + " balance:  " + receivingAccount.getBalance());
 
         }
         else
