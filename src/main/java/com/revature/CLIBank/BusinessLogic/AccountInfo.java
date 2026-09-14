@@ -1,7 +1,5 @@
 package com.revature.CLIBank.BusinessLogic;
 
-//Mo
-import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -12,7 +10,9 @@ public class AccountInfo {
     private String userName;
     private String passWord;
     //private boolean status = true; //-Mo
-    //private String AccountName; //-Mo
+    //private long balance ;
+
+    //private String accountName; //-Mo
     //TODO: add an attribute for Account Names (e.g checking and savings) - Mo
 
 
@@ -31,13 +31,13 @@ public class AccountInfo {
 
     //TODO: write setAccountName() logic - Mo
 
-    */
+
 
 
 
     private String accountName; //Mo - should be added
 
-    /*
+
     //Mo
     public boolean isStatus() {
         return status;
@@ -49,8 +49,8 @@ public class AccountInfo {
         this.status = status;
     }
     //TODO: set if the account is active/inactive from repository layer
-    */
 
+    */
 
 
 
@@ -61,15 +61,19 @@ public class AccountInfo {
         this.passWord = passWord;
     }
 
+    /*
     //Mo, dummy method
     public long getBalance(){
-        return 0;
+        return balance;
     }
 
     //Mo, dummy method
     public void setBalance(long balance){
+        this.balance = balance;
 
     }
+    */
+
 
     public UUID getAccountID() {
         return accountID;
