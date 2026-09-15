@@ -19,6 +19,15 @@ public class API {
         this.bankTransactions = new BankTransactions();
     }
 
+    /**
+     * Send the credentials from the user to business layer
+     * to add them to the database, so they pass the requirements.
+     *
+     * @author Nicholas DiGirolamo
+     * @param username
+     * @param password
+     * @return boolean, the success of the registration
+     */
     public boolean register(String username, String password) {
         boolean unameStat = AccountValidation.isUserNameValid(username);
         boolean pwStat = AccountValidation.isPassWordValid(password);
@@ -37,11 +46,29 @@ public class API {
         return unameStat && pwStat;
     }
 
+    /**
+     * Send the credentials from the user to check if such a
+     * user exists in the database. If so, update the session
+     * to store the user corresponding to those credentials.
+     *
+     * @author Nicholas DiGirolamo
+     * @param username
+     * @param password
+     * @return boolean, the success of the login attempt
+     */
     public boolean login(String username, String password) {
+        boolean uEmpty = username.isEmpty();
+        boolean pEmpty = password.isEmpty();
+
+        if(pEmpty) this.result = "Please enter a password";
+        if(uEmpty) this.result = "Please enter a username";
+        if(uEmpty || pEmpty) return false;
+
         User stagedUser = new User(username, password);
 
         if(stagedUser.exists) {
             this.user = stagedUser;
+            this.result = "Login successful.";
         } else {
             this.result = "Login failed. Try again.";
         }
@@ -51,24 +78,12 @@ public class API {
 
     public void deposit(String acct, String amount) {
         AccountInfo ai = new AccountInfo(UUID.fromString(acct));
-
-        String[] parts = amount.split("..");
-        long dollars = Long.parseLong(parts[0]);
-        long cents = Long.parseLong(parts[1]);
-        long fund = 100*dollars + cents;
-
-        this.bankTransactions.deposit(ai, fund);
+        this.bankTransactions.deposit(ai, parseMoney(amount));
     }
 
     public void withdraw(String acct, String amount) {
         AccountInfo ai = new AccountInfo(UUID.fromString(acct));
-
-        String[] parts = amount.split("..");
-        long dollars = Integer.parseInt(parts[0]);
-        long cents = Integer.parseInt(parts[1]);
-        long fund = 100*dollars + cents;
-
-        this.bankTransactions.deposit(ai, fund);
+        this.bankTransactions.deposit(ai, parseMoney(amount));
     }
 
     public void transfer(String src, String dest, String amount) {
@@ -80,32 +95,54 @@ public class API {
                 100*Long.parseLong(parts[0]) + Long.parseLong(parts[1]));
     }
 
-    public void getAcctTransactions(String acct, int n) {
+    /**
+     * Retrieve `rows` number of the most recent transactions from a
+     * single bank account.
+     *
+     * @author Nicholas DiGirolamo
+     * @param acct, a String representation of a bank account UUID--not a user.
+     * @param rows, the number of rows to return.
+     *              rows >= 0: that number of rows are returned
+     *              rows < 0: return all rows.
+     */
+    public void getAcctTransactions(String acct, int rows) {
+        if(rows == 0) { this.result = ""; return; }
+
         List<AccountInfo> accounts = this.user.getAccounts();
         StringBuilder sb = new StringBuilder();
 
         for(AccountInfo ac : accounts) {
             if(ac.getAccountID().toString().equals(acct)) {
-                List<Transaction> lt;
+                List<Transaction> listTransactions;
 
-                if(n >= 0) lt = ac.getTransactions(n);
-                else lt = ac.getTransactions();
+                if(rows > 0) listTransactions = ac.getTransactions(rows);
+                else listTransactions = ac.getTransactions();
 
-                for(Transaction t : lt) {
-                    sb.append(t.getSourceAccountId());
-                    sb.append(" ");
-                    sb.append(t.getDestinationAccountId());
-                    sb.append(" ");
-                    sb.append(t.getAmount());
-                    sb.append(" ");
-                    sb.append(t.getTimestamp());
-                    sb.append("\n");
+                try {
+                    for (Transaction t : listTransactions) {
+                        sb.append(t.getSourceAccountId());
+                        sb.append(" ");
+                        sb.append(t.getDestinationAccountId());
+                        sb.append(" ");
+                        sb.append(t.getAmount());
+                        sb.append(" ");
+                        sb.append(t.getTimestamp());
+                        sb.append("\n");
+                    }
+                } catch (NullPointerException npe) {
+                    sb.append("Warning: null transaction.\n");
                 }
             }
         }
         this.result = sb.toString();
     }
 
+    /**
+     * Get all transactions associated with a user, querying every
+     * account.
+     *
+     * @author Nicholas DiGirolamo
+     */
     public void getTransactions() {
         List<AccountInfo> accounts = this.user.getAccounts();
         StringBuilder sb = new StringBuilder();
@@ -118,6 +155,12 @@ public class API {
         this.result = sb.toString();
     }
 
+    /**
+     * Retrieve the list of all accounts associated with the user
+     * the API session currently holds.
+     *
+     * @author Nicholas DiGirolamo
+     */
     public void getAccts() {
         StringBuilder sb = new StringBuilder();
         List<AccountInfo> accts = this.user.getAccounts();
@@ -142,5 +185,42 @@ public class API {
 
     public String getResult() {
         return this.result;
+    }
+
+    /**
+     * Ingest a String representing money and return
+     * a long, in cents.
+     *
+     * @author Nicholas DiGirolamo
+     * @param str, a string meant to hold a dollar amount.
+     *             This may be of the form `$DOLLARS.CENTS`
+     *             or `DOLLARS.CENTS`.
+     * @return long, the number of cents equivalent to the amount
+     * specified.
+     */
+    long parseMoney(String str) {
+        long dollars = 0, cents = 0;
+
+        try {
+            String[] parts = str.split("\\.");
+
+            /* Remove dollar sign if and only if it is at the beginning,
+             * otherwise, rely on exception handling. */
+            if(parts[0].charAt(0) == '$')
+                parts[0] = parts[0].substring(1);
+
+            dollars = Long.parseLong(parts[0]);
+            cents = Long.parseLong(parts[1].substring(0, 2));
+        } catch(NumberFormatException nfe) {
+            return Long.MIN_VALUE;
+        } catch(ArithmeticException ae) {
+            return Long.MAX_VALUE;
+        } catch(IndexOutOfBoundsException ioob) {
+            return 100*dollars;
+        }
+
+        if(cents < 0) return Long.MIN_VALUE;
+
+        return 100*dollars + cents;
     }
 }

@@ -104,7 +104,9 @@ public class CLIBank {
         } else if (args.size() == 3) {
             int stagedRows = Integer.parseInt(args.get(1));
             if (stagedRows <= 1000) {
-                api.getAcctTransactions(args.get(1), Integer.parseInt(args.get(2)));
+                int rows = Integer.parseInt(args.get(2));
+                if(rows < 0) rows = 0;
+                api.getAcctTransactions(args.get(1), rows);
                 System.out.print(api.getResult());
             }
         } else {
