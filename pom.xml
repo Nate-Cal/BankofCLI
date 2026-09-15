@@ -79,4 +79,19 @@
 
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.3</version>
+                <configuration>
+                    <environmentVariables>
+                        <DATABASE-PATH>jdbc:sqlite:./data/test-bank.db</DATABASE-PATH>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

@@ -17,6 +17,7 @@ public class API {
         this.user = null;
         this.result = null;
         this.bankTransactions = new BankTransactions();
+        new AccountRepo().initSchema();
     }
 
     /**
