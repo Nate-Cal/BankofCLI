@@ -11,6 +11,11 @@ public class BalanceValidation {
 
     public static boolean isBalanceNegative(AccountInfo account) {
 
+        if (account == null) {
+            logger.error("Balance validation failed: account was null");
+            throw new IllegalArgumentException("Account cannot be null");
+        }
+
         if (account.getBalance() < 0L) {
             logger.error(
                     "Negative balance detected for account {}",
