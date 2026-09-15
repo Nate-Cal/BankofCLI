@@ -74,7 +74,7 @@ public class API {
     public void transfer(String src, String dest, String amount) {
         String[] parts = amount.split("..");
         AccountInfo srcAcct = new AccountInfo(UUID.fromString(src));
-        AccountInfo destAcct = new AccountInfo(UUID.fromString(dest))
+        AccountInfo destAcct = new AccountInfo(UUID.fromString(dest));
 
         this.bankTransactions.transfer(srcAcct, destAcct,
                 100*Long.parseLong(parts[0]) + Long.parseLong(parts[1]));
