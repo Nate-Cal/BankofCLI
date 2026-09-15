@@ -4,6 +4,7 @@ import com.revature.CLIBank.BusinessLogic.*;
 import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.model.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -79,12 +80,26 @@ public class API {
 
     public void deposit(String acct, String amount) {
         AccountInfo ai = new AccountInfo(UUID.fromString(acct));
-        this.bankTransactions.deposit(ai, parseMoney(amount));
+        long specBalance = parseMoney(amount);
+
+        if(specBalance == 0 || this.bankTransactions.deposit(ai, specBalance) == 0) {
+            this.result = "No money was deposited. Check your prompt again.";
+        } else {
+            this.result = "$" + specBalance + " successfully deposited into "
+                    + ai.getAccountID().toString() + ".";
+        }
     }
 
     public void withdraw(String acct, String amount) {
         AccountInfo ai = new AccountInfo(UUID.fromString(acct));
-        this.bankTransactions.deposit(ai, parseMoney(amount));
+        long specBalance = parseMoney(amount);
+
+        if(specBalance == 0 || this.bankTransactions.withdraw(ai, specBalance) == 0) {
+            this.result = "No money was withdrawn. Check your prompt again.";
+        } else {
+            this.result = "$" + specBalance + " successfully withdrawn from "
+                    + ai.getAccountID().toString() + ".";
+        }
     }
 
     public void transfer(String src, String dest, String amount) {
@@ -161,6 +176,17 @@ public class API {
         this.result = sb.toString();
     }
 
+    public void getTransactions(int rows) {
+        this.getTransactions();
+        String[] subrange = Arrays.copyOf(this.result.split("\n"), rows);
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < rows; i++) {
+            sb.append(subrange[i]);
+            sb.append("\n");
+        }
+        this.result = sb.toString();
+    }
+
     /**
      * Retrieve the list of all accounts associated with the user
      * the API session currently holds.
@@ -173,6 +199,7 @@ public class API {
 
         sb.append("Your accounts: ");
         sb.append(accts.size());
+        sb.append("\n");
         sb.append("Account number/Type/Balance\n");
         for(AccountInfo ac : accts) {
             sb.append(ac.getAccountID());
@@ -194,6 +221,7 @@ public class API {
 
         AccountInfo ai = new AccountInfo(this.user.getUserID(), correctPin, at);
         AccountRepo.insertAccount(ai);
+        this.result = "Account successfully created.\nAccount number: " + ai.getAccountID();
     }
 
     public void deleteAcct(String uuid, String pin, String type) {
@@ -227,7 +255,7 @@ public class API {
      * specified.
      */
     long parseMoney(String str) {
-        long dollars = 0, cents = 0;
+        long dollars = 0, cents;
 
         try {
             String[] parts = str.split("\\.");
@@ -239,12 +267,12 @@ public class API {
 
             dollars = Long.parseLong(parts[0]);
             cents = Long.parseLong(parts[1].substring(0, 2));
-        } catch(NumberFormatException nfe) {
-            return Long.MIN_VALUE;
-        } catch(ArithmeticException ae) {
-            return Long.MAX_VALUE;
-        } catch(IndexOutOfBoundsException ioob) {
-            return 100*dollars;
+        } catch(Exception e) {
+            if(e instanceof IndexOutOfBoundsException) {
+                return 100*dollars;
+            } else {
+                return 0L;
+            }
         }
 
         if(cents < 0) return Long.MIN_VALUE;

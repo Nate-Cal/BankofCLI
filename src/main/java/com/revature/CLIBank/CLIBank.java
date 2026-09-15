@@ -123,18 +123,19 @@ public class CLIBank {
         } else if (cmd.equalsIgnoreCase("transactions")) {
             if (args.size() == 1) {
                 api.getTransactions();
-        } else if (args.size() == 3) {
-            int stagedRows = Integer.parseInt(args.get(1));
-            if (stagedRows <= 1000) {
-                int rows = Integer.parseInt(args.get(2));
-                if(rows < 0) rows = 0;
-                api.getAcctTransactions(args.get(1), rows);
-                System.out.print(api.getResult());
+            } else if(args.size() == 2) {
+                api.getTransactions(100);
+            } else if (args.size() == 3) {
+                int stagedRows = Integer.parseInt(args.get(1));
+                if (stagedRows <= 1000) {
+                    int rows = Integer.parseInt(args.get(2));
+                    if(rows < 0) rows = 0;
+                    api.getAcctTransactions(args.get(1), rows);
+                    System.out.print(api.getResult());
+                }
+            } else {
+                printError("Syntax error");
             }
-        } else {
-            printError("Syntax error");
-        }
-
         } else if(cmd.equalsIgnoreCase("help")) {
             System.out.println(helpTxt);
         } else {
