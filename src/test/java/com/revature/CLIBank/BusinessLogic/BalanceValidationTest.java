@@ -54,4 +54,14 @@ class BalanceValidationTest {
 
         assertTrue(BalanceValidation.isBalanceNegative(account));
     }
+
+    @Test
+    void nullAccountShouldThrowException() {
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> BalanceValidation.isBalanceNegative(null)
+        );
+        assertEquals("Account cannot be null", error.getMessage());
+    }
 }

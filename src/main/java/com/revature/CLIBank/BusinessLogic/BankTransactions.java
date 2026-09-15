@@ -41,9 +41,9 @@ public class BankTransactions {
         }
 
         AccountRepo accountRepo = new AccountRepo();
-         if(accountRepo.transferMoney(sendingAccount, receivingAccount, amount)){
-             return amount;
-         }
+        if(accountRepo.transferMoney(sendingAccount, receivingAccount, amount)){
+            return amount;
+        }
         return 0;
 
        /* long balanceOne = sendingAccount.getBalance();
@@ -59,4 +59,3 @@ public class BankTransactions {
 
     }
 }
-
