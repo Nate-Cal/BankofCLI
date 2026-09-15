@@ -2,9 +2,13 @@ package com.revature.CLIBank;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+
 public class CLIBankTest {
     @Test
-    void exec() {
+    void exec_blank() {
+        ArrayList<String> args = new ArrayList<>();
+        args.add("");
 
     }
 }

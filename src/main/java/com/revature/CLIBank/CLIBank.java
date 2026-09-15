@@ -38,7 +38,11 @@ public class CLIBank {
 
     private static API api;
 
-    private static void register() {
+    protected static void printError(String str) {
+        System.err.println(str);
+    }
+
+    protected static void register() {
         String username, password;
         Scanner sc = new Scanner(System.in);
 
@@ -56,7 +60,7 @@ public class CLIBank {
         System.out.println("Successfully registered. Please log in.");
     }
 
-    private static boolean login() {
+    protected static boolean login() {
         Scanner sc = new Scanner(System.in);
 
         System.out.println("Bank of CLI Login");
@@ -69,7 +73,7 @@ public class CLIBank {
         return api.login(username, password);
     }
 
-    private static void exec(List<String> args) {
+    protected static void exec(List<String> args) {
         String cmd = args.getFirst();
 
         if (cmd.equalsIgnoreCase("exit") || cmd.equalsIgnoreCase("quit")) {
@@ -84,14 +88,14 @@ public class CLIBank {
                 System.out.print(api.getResult());
             } catch (Exception e) {
                 if (e instanceof IndexOutOfBoundsException)
-                    System.err.println("Syntax error: too few arguments.");
+                    printError("Syntax error: too few arguments.");
             }
         } else if (cmd.equalsIgnoreCase("withdraw")) {
             try {
                 api.withdraw(args.get(1), args.get(2));
             } catch (Exception e) {
                 if (e instanceof IndexOutOfBoundsException) {
-                    System.err.println("Syntax error: too few arguments");
+                    printError("Syntax error: too few arguments");
                 }
             }
         } else if (cmd.equalsIgnoreCase("transactions")) {
@@ -100,21 +104,23 @@ public class CLIBank {
         } else if (args.size() == 3) {
             int stagedRows = Integer.parseInt(args.get(1));
             if (stagedRows <= 1000) {
-                api.getAcctTransactions(args.get(1), Integer.parseInt(args.get(2)));
+                int rows = Integer.parseInt(args.get(2));
+                if(rows < 0) rows = 0;
+                api.getAcctTransactions(args.get(1), rows);
                 System.out.print(api.getResult());
             }
         } else {
-            System.err.println("Syntax error");
+            printError("Syntax error");
         }
 
         } else if(cmd.equalsIgnoreCase("help")) {
             System.out.println(helpTxt);
         } else {
-            System.err.println("Unrecognized command.");
+            printError("Unrecognized command");
         }
     }
 
-    private static void interactive() {
+    protected static void interactive() {
         Scanner sc = new Scanner(System.in);
 
         System.out.print(logo);
@@ -159,7 +165,7 @@ public class CLIBank {
             try {
                 api.login(arguments.get(3), arguments.get(5));
             } catch(IndexOutOfBoundsException e) {
-                System.err.println("Syntax error. Exiting.");
+                printError("Syntax error. Exiting.");
                 return;
             }
 
