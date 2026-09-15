@@ -26,7 +26,7 @@ public class CLIBank {
     """
     Bank of CLI shell commands:
     
-    help: Show this help
+    help/?: Show this help
     accounts: List your accounts
     transactions <your account> [optional: n]: List recent transactions
     create <PIN> <checking|savings>: create a new account
@@ -34,8 +34,7 @@ public class CLIBank {
     deposit <your account> <amount>: Add money
     withdraw <your account> <amount>: Remove money
     transfer <your account> <recipient account number> <amount>: Transfer money
-    exit: End your session
-    quit: End your session
+    exit/quit: End your session
     """;
 
     private static API api;
@@ -137,7 +136,7 @@ public class CLIBank {
             } else {
                 printError("Syntax error");
             }
-        } else if(cmd.equalsIgnoreCase("help")) {
+        } else if(cmd.equalsIgnoreCase("help") || cmd.equals("?")) {
             System.out.println(helpTxt);
         } else {
             printError("Unrecognized command");
@@ -158,8 +157,10 @@ public class CLIBank {
             } else if (response.equalsIgnoreCase("r")) {
                 status = login();
             }
-            if(!status && api.getResult() != null)
+            if(!status && api.getResult() != null) {
                 System.out.println(api.getResult());
+                System.out.println();
+            }
 
         } while (!status);
 
