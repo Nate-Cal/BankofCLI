@@ -85,7 +85,7 @@ public class API {
         if(specBalance == 0 || this.bankTransactions.deposit(ai, specBalance) == 0) {
             this.result = "No money was deposited. Check your prompt again.";
         } else {
-            this.result = "$" + specBalance + " successfully deposited into "
+            this.result = "$" + specBalance / 100 + "." + specBalance % 100 + " successfully deposited into "
                     + ai.getAccountID().toString() + ".";
         }
     }
@@ -97,7 +97,7 @@ public class API {
         if(specBalance == 0 || this.bankTransactions.withdraw(ai, specBalance) == 0) {
             this.result = "No money was withdrawn. Check your prompt again.";
         } else {
-            this.result = "$" + specBalance + " successfully withdrawn from "
+            this.result = "$" + specBalance / 100 + "." + specBalance % 100 + " successfully withdrawn from "
                     + ai.getAccountID().toString() + ".";
         }
     }
@@ -224,15 +224,17 @@ public class API {
         this.result = "Account successfully created.\nAccount number: " + ai.getAccountID();
     }
 
-    public void deleteAcct(String uuid, String pin, String type) {
+    public void deleteAcct(String uuid, String pin) {
         UUID id = UUID.fromString(uuid);
         int corrPin = validatePin(pin);
-        AccountType at = validateAcctType(type);
-        if(corrPin == -1) return;
 
-        AccountRepo ar = new AccountRepo();
-        AccountInfo ai = ar.findAccountById(id);
-        // AccountRepo.removeUser(ai);
+        for(AccountInfo ai : user.getAccounts()) {
+            if(ai.getPin() == corrPin && ai.getAccountID() == id) {
+                AccountRepo.deleteAccount(ai);
+                this.result = "Successfully deleted account " + uuid;
+            }
+        }
+        this.result = "Did not delete account " + uuid + ". Try again.";
     }
 
     public User getUser() {
