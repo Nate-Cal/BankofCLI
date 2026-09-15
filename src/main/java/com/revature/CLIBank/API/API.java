@@ -11,12 +11,13 @@ public class API {
 
     private User user;
     private String result;
-    private BankTransactions bankTransactions;
+    private final BankTransactions bankTransactions;
 
     public API() {
         this.user = null;
         this.result = null;
         this.bankTransactions = new BankTransactions();
+        new AccountRepo().initSchema();
     }
 
     /**
@@ -147,6 +148,11 @@ public class API {
         List<AccountInfo> accounts = this.user.getAccounts();
         StringBuilder sb = new StringBuilder();
 
+        if(accounts.isEmpty()) {
+            this.result = "You have no accounts. Open one to see information.";
+            return;
+        }
+
         for(AccountInfo ai : accounts) {
             getAcctTransactions(ai.getAccountID().toString(), -1);
             sb.append(this.result);
@@ -177,6 +183,28 @@ public class API {
             sb.append("\n");
         }
         this.result = sb.toString();
+    }
+
+    public void creatAcct(String pin, String type) {
+        AccountType at = validateAcctType(type);
+        if(at == null) return;
+
+        int correctPin = validatePin(pin);
+        if(correctPin == -1) return;
+
+        AccountInfo ai = new AccountInfo(this.user.getUserID(), correctPin, at);
+        AccountRepo.insertAccount(ai);
+    }
+
+    public void deleteAcct(String uuid, String pin, String type) {
+        UUID id = UUID.fromString(uuid);
+        int corrPin = validatePin(pin);
+        AccountType at = validateAcctType(type);
+        if(corrPin == -1) return;
+
+        AccountRepo ar = new AccountRepo();
+        AccountInfo ai = ar.findAccountById(id);
+        // AccountRepo.removeUser(ai);
     }
 
     public User getUser() {
@@ -222,5 +250,33 @@ public class API {
         if(cents < 0) return Long.MIN_VALUE;
 
         return 100*dollars + cents;
+    }
+
+    private int validatePin(String pin) {
+        int correctPin;
+
+        try {
+            correctPin = Integer.parseInt(pin);
+        } catch(NumberFormatException nfe) {
+            this.result = "Invalid PIN.";
+            return -1;
+        }
+
+        if(correctPin < 0 || correctPin >= 10_000) {
+            this.result = "Invalid PIN.";
+            return -1;
+        }
+        return correctPin;
+    }
+
+    AccountType validateAcctType(String type) {
+        if(type.equalsIgnoreCase("checking")) {
+            return AccountType.CHECKING;
+        } else if(type.equalsIgnoreCase("savings")) {
+            return AccountType.SAVINGS;
+        } else {
+            this.result = "Invalid account type.";
+            return null;
+        }
     }
 }
