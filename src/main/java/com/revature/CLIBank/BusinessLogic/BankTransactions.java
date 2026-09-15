@@ -8,6 +8,7 @@ public class BankTransactions {
     public long deposit(AccountInfo accountInfo, long amount) {
         BankActions bankActions = new BankActions();
         if (!bankActions.checkDeposit(accountInfo, amount)) {
+            BankLog.outcome(BankLog.Event.DEPOSIT_IN_MEMORY, false, null);
             return 0;
         }
         long balance, newBalance;
@@ -16,6 +17,7 @@ public class BankTransactions {
         accountInfo.setBalance(newBalance);
 
         //return the amount deposited
+        BankLog.outcome(BankLog.Event.DEPOSIT_IN_MEMORY, true, null);
         return amount;
     }
 
@@ -23,6 +25,7 @@ public class BankTransactions {
     public long withdraw(AccountInfo accountInfo, long amount) {
         BankActions bankActions = new BankActions();
         if(!bankActions.checkWithdraw(accountInfo, amount)){
+            BankLog.outcome(BankLog.Event.WITHDRAWAL_IN_MEMORY, false, null);
             return 0;
         }
         long balance, newBalance;
@@ -30,6 +33,7 @@ public class BankTransactions {
         newBalance = balance - amount;
         accountInfo.setBalance(newBalance);
 
+        BankLog.outcome(BankLog.Event.WITHDRAWAL_IN_MEMORY, true, null);
         return amount;
     }
 
@@ -37,13 +41,16 @@ public class BankTransactions {
     public synchronized long transfer(AccountInfo sendingAccount, AccountInfo receivingAccount, long amount) {
         BankActions bankActions = new BankActions();
         if (!bankActions.checkTransfer(sendingAccount, receivingAccount, amount)) {
+            BankLog.outcome(BankLog.Event.TRANSFER, false, null);
             return 0;
         }
 
         AccountRepo accountRepo = new AccountRepo();
         if(accountRepo.transferMoney(sendingAccount, receivingAccount, amount)){
+            BankLog.outcome(BankLog.Event.TRANSFER, true, null);
             return amount;
         }
+        BankLog.outcome(BankLog.Event.TRANSFER, false, null);
         return 0;
 
        /* long balanceOne = sendingAccount.getBalance();
