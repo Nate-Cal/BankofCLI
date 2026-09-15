@@ -3,7 +3,6 @@ import com.revature.CLIBank.model.AccountInfo;
 
 public class BankActions {
 
-    //Mo
     public boolean checkDeposit(AccountInfo accountInfo, long amount){
         return accountInfo.getAccountID() != null
                 && !accountInfo.isFrozen()
@@ -11,7 +10,6 @@ public class BankActions {
 
     }
     public boolean checkWithdraw(AccountInfo accountInfo, long amount){
-        //AccountInfo accountInfo = new AccountInfo(accountID);
         return accountInfo.getAccountID() != null
                 && !accountInfo.isFrozen()
                 && amount > 0
