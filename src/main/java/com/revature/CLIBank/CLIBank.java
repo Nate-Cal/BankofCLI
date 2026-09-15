@@ -29,6 +29,8 @@ public class CLIBank {
     help: Show this help
     accounts: List your accounts
     transactions <your account> [optional: n]: List recent transactions
+    create <PIN> <checking|savings>: create a new account
+    delete <your account> <pin> <type>: delete an account
     deposit <your account> <amount>: Add money
     withdraw <your account> <amount>: Remove money
     transfer <your account> <recipient account number> <amount>: Transfer money
@@ -79,6 +81,26 @@ public class CLIBank {
         if (cmd.equalsIgnoreCase("exit") || cmd.equalsIgnoreCase("quit")) {
             System.out.println("Goodbye!");
             System.exit(0); /* Normal, planned exit. */
+        } else if(cmd.equalsIgnoreCase("create")) {
+            if(args.size() < 3) {
+                printError("Create: not enough arguments");
+                return;
+            } else if (args.size() > 3) {
+                printError("Create: superfluous argument");
+                return;
+            }
+            api.creatAcct(args.get(1), args.get(2));
+            System.out.println(api.getResult());
+        } else if(cmd.equals("delete")) {
+            if(args.size() < 4) {
+                printError("Delete: not enough arguments");
+                return;
+            } else if (args.size() > 4) {
+                printError("Delete: superfluous argument");
+                return;
+            }
+            api.deleteAcct(args.get(1), args.get(2), args.get(3));
+            System.out.println(api.getResult());
         } else if (cmd.equalsIgnoreCase("accounts")) {
             api.getAccts();
             System.out.print(api.getResult());

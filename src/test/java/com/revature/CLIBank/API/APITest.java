@@ -24,6 +24,14 @@ public class APITest {
     }
 
     @Test
+    public void login_fail_empty() {
+        API api = new API();
+
+        api.login("", "Pa$$w0rdPassw0rd");
+        Assertions.assertEquals("Please enter a username", api.getResult());
+    }
+
+    @Test
     public void zeroTransactions() {
        API api = new API();
 
