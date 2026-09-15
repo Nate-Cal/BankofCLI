@@ -30,7 +30,7 @@ public class CLIBank {
     accounts: List your accounts
     transactions <your account> [optional: n]: List recent transactions
     create <PIN> <checking|savings>: create a new account
-    delete <your account> <pin> <type>: delete an account
+    delete <your account> <PIN>: delete an account
     deposit <your account> <amount>: Add money
     withdraw <your account> <amount>: Remove money
     transfer <your account> <recipient account number> <amount>: Transfer money
@@ -42,6 +42,7 @@ public class CLIBank {
 
     protected static void printError(String str) {
         System.err.println(str);
+        System.err.println();
     }
 
     protected static void register() {
@@ -54,9 +55,9 @@ public class CLIBank {
 
             System.out.println("Register for a new account with the Bank of CLI.");
             System.out.print("Username: ");
-            username = sc.next();
+            username = sc.nextLine();
             System.out.print("Password: ");
-            password = sc.next();
+            password = sc.nextLine();
         } while(!api.register(username, password));
 
         System.out.println("Successfully registered. Please log in.");
@@ -67,9 +68,9 @@ public class CLIBank {
 
         System.out.println("Bank of CLI Login");
         System.out.print("Username: ");
-        String username = sc.next();
+        String username = sc.nextLine();
         System.out.print("Password: ");
-        String password = sc.next();
+        String password = sc.nextLine();
 
         /* Mutates the API object to authorize all future API calls. */
         return api.login(username, password);
@@ -86,20 +87,20 @@ public class CLIBank {
                 printError("Create: not enough arguments");
                 return;
             } else if (args.size() > 3) {
-                printError("Create: superfluous argument");
+                printError("Create: too many arguments");
                 return;
             }
             api.creatAcct(args.get(1), args.get(2));
             System.out.println(api.getResult());
         } else if(cmd.equals("delete")) {
-            if(args.size() < 4) {
+            if(args.size() < 3) {
                 printError("Delete: not enough arguments");
                 return;
-            } else if (args.size() > 4) {
-                printError("Delete: superfluous argument");
+            } else if (args.size() > 3) {
+                printError("Delete: too many arguments");
                 return;
             }
-            api.deleteAcct(args.get(1), args.get(2), args.get(3));
+            api.deleteAcct(args.get(1), args.get(2));
             System.out.println(api.getResult());
         } else if (cmd.equalsIgnoreCase("accounts")) {
             api.getAccts();
@@ -107,7 +108,7 @@ public class CLIBank {
         } else if (cmd.equalsIgnoreCase("deposit")) {
             try {
                 api.deposit(args.get(1), args.get(2));
-                System.out.print(api.getResult());
+                System.out.println(api.getResult());
             } catch (Exception e) {
                 if (e instanceof IndexOutOfBoundsException)
                     printError("Syntax error: too few arguments.");
@@ -123,18 +124,19 @@ public class CLIBank {
         } else if (cmd.equalsIgnoreCase("transactions")) {
             if (args.size() == 1) {
                 api.getTransactions();
-        } else if (args.size() == 3) {
-            int stagedRows = Integer.parseInt(args.get(1));
-            if (stagedRows <= 1000) {
-                int rows = Integer.parseInt(args.get(2));
-                if(rows < 0) rows = 0;
-                api.getAcctTransactions(args.get(1), rows);
-                System.out.print(api.getResult());
+            } else if(args.size() == 2) {
+                api.getTransactions(100);
+            } else if (args.size() == 3) {
+                int stagedRows = Integer.parseInt(args.get(1));
+                if (stagedRows <= 1000) {
+                    int rows = Integer.parseInt(args.get(2));
+                    if(rows < 0) rows = 0;
+                    api.getAcctTransactions(args.get(1), rows);
+                    System.out.print(api.getResult());
+                }
+            } else {
+                printError("Syntax error");
             }
-        } else {
-            printError("Syntax error");
-        }
-
         } else if(cmd.equalsIgnoreCase("help")) {
             System.out.println(helpTxt);
         } else {
@@ -144,13 +146,12 @@ public class CLIBank {
 
     protected static void interactive() {
         Scanner sc = new Scanner(System.in);
-
         System.out.print(logo);
 
         boolean status = false;
         do {
             System.out.print("Welcome to the Bank of CLI. Are you a new user or returning user? (N/R) ");
-            String response = sc.next();
+            String response = sc.nextLine();
             if (response.equalsIgnoreCase("n")) {
                 register();
                 status = login();
