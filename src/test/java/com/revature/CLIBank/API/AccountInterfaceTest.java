@@ -1,12 +1,121 @@
 package com.revature.CLIBank.API;
 
+import com.revature.CLIBank.model.AccountInfo;
 import org.junit.jupiter.api.Test;
+import java.io.ByteArrayInputStream;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class AccountInterfaceTest {
 
+
     @Test
-    void askDeposit() {
+    void askDepositPositive() {
+        AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
+        account.setBalance(1000L);
+        account.setFrozen(false);
+
+        System.setIn(new ByteArrayInputStream("25.00\n".getBytes()));
+
+        AccountInterface accountInterface = new AccountInterface();
+        accountInterface.askDeposit(account);
+
+        assertEquals(3500L, account.getBalance());
+    }
+
+    @Test
+    void askDepositNegative() {
+        AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
+        account.setBalance(1000L);
+        account.setFrozen(false);
+
+        System.setIn(new ByteArrayInputStream("-25.00\n".getBytes()));
+
+        AccountInterface accountInterface = new AccountInterface();
+        accountInterface.askDeposit(account);
+
+        assertEquals(1000L, account.getBalance());
+    }
+
+    @Test
+    void askDepositInvalidInput() {
+        AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
+        account.setBalance(1000L);
+        account.setFrozen(false);
+
+        System.setIn(new ByteArrayInputStream("abc\n".getBytes()));
+
+        AccountInterface accountInterface = new AccountInterface();
+        accountInterface.askDeposit(account);
+
+        assertEquals(1000L, account.getBalance());
+    }
+
+    @Test
+    void askWithdrawPositive() {
+        AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
+        account.setBalance(3500L);
+        account.setFrozen(false);
+
+        System.setIn(new ByteArrayInputStream("25.00\n".getBytes()));
+
+        AccountInterface accountInterface = new AccountInterface();
+        accountInterface.askWithdraw(account);
+
+        assertEquals(1000L, account.getBalance());
+    }
+
+
+    @Test
+    void askWithdrawNegative() {
+        AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
+        account.setBalance(1000L);
+        account.setFrozen(false);
+
+        System.setIn(new ByteArrayInputStream("25.00\n".getBytes()));
+
+        AccountInterface accountInterface = new AccountInterface();
+        accountInterface.askWithdraw(account);
+
+        assertEquals(1000L, account.getBalance());
+    }
+
+    @Test
+    void askTransferPositive() {
+        AccountInfo sendingAccount = new AccountInfo(UUID.randomUUID(), 1234);
+        sendingAccount.setBalance(7500L);
+        sendingAccount.setFrozen(false);
+
+        AccountInfo receivingAccount = new AccountInfo(UUID.randomUUID(), 4321);
+        receivingAccount.setBalance(1500L);
+        receivingAccount.setFrozen(false);
+
+        System.setIn(new ByteArrayInputStream("30.00\n".getBytes()));
+
+        AccountInterface accountInterface = new AccountInterface();
+        accountInterface.askTransfer(sendingAccount, receivingAccount);
+
+        assertEquals(4500L, sendingAccount.getBalance());
+        assertEquals(4500L, receivingAccount.getBalance());
+    }
+
+    @Test
+    void askTransferNegative() {
+        AccountInfo sendingAccount = new AccountInfo(UUID.randomUUID(), 1234);
+        sendingAccount.setBalance(2000L);
+        sendingAccount.setFrozen(false);
+
+        AccountInfo receivingAccount = new AccountInfo(UUID.randomUUID(), 4321);
+        receivingAccount.setBalance(3000L);
+        receivingAccount.setFrozen(false);
+
+        System.setIn(new ByteArrayInputStream("50.00\n".getBytes()));
+
+        AccountInterface accountInterface = new AccountInterface();
+        accountInterface.askTransfer(sendingAccount, receivingAccount);
+
+        assertEquals(2000L, sendingAccount.getBalance());
+        assertEquals(3000L, receivingAccount.getBalance());
     }
 }

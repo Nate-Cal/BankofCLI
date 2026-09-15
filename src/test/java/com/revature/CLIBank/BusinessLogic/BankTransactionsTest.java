@@ -24,6 +24,77 @@ class BankTransactionsTest {
     }
 
     @Test
+    void depositNegative() {
+        AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
+        account.setBalance(100L);
+        account.setFrozen(false);
+
+        BankTransactions bankTransactions = new BankTransactions();
+        long result = bankTransactions.deposit(account, -50L);
+
+        assertEquals(0L, result);
+        assertEquals(100L, account.getBalance());
+    }
+
+    @Test
+    void withdraw() {
+        AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
+        account.setBalance(100L);
+        account.setFrozen(false);
+
+        BankTransactions bankTransactions = new BankTransactions();
+        long result = bankTransactions.withdraw(account, 50L);
+
+        assertEquals(50L, result);
+        assertEquals(50L, account.getBalance());
+    }
+
+    @Test
+    void withdrawNegative() {
+        AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
+        account.setBalance(100L);
+        account.setFrozen(false);
+
+        BankTransactions bankTransactions = new BankTransactions();
+        long result = bankTransactions.withdraw(account, 150L);
+
+        assertEquals(0L, result);
+        assertEquals(100L, account.getBalance());
+    }
+
+    @Test
     void transfer() {
+        AccountInfo sender = new AccountInfo(UUID.randomUUID(), 1234);
+        sender.setBalance(100L);
+        sender.setFrozen(false);
+
+        AccountInfo receiver = new AccountInfo(UUID.randomUUID(), 4321);
+        receiver.setBalance(50L);
+        receiver.setFrozen(false);
+
+        BankTransactions bankTransactions = new BankTransactions();
+        long result = bankTransactions.transfer(sender, receiver, 25L);
+
+        assertEquals(25L, result);
+        assertEquals(75L, sender.getBalance());
+        assertEquals(75L, receiver.getBalance());
+    }
+
+    @Test
+    void transferNegative() {
+        AccountInfo sender = new AccountInfo(UUID.randomUUID(), 1234);
+        sender.setBalance(100L);
+        sender.setFrozen(false);
+
+        AccountInfo receiver = new AccountInfo(UUID.randomUUID(), 4321);
+        receiver.setBalance(50L);
+        receiver.setFrozen(false);
+
+        BankTransactions bankTransactions = new BankTransactions();
+        long result = bankTransactions.transfer(sender, receiver, 150L);
+
+        assertEquals(0L, result);
+        assertEquals(100L, sender.getBalance());
+        assertEquals(50L, receiver.getBalance());
     }
 }
