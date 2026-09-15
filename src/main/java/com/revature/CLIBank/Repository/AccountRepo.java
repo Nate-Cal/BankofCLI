@@ -483,6 +483,64 @@ public class AccountRepo {
     }
 
 
+    /**
+     * Method to delete an account in the database
+     * It will automatically delete all the transactions involving this account
+     */
+    public static void deleteAccount(AccountInfo account) {
+        String deleteTransaction = """
+            DELETE FROM Transactions
+            WHERE sourceAccountId = ? OR destinationAccountId = ?
+            """;
+        String deleteAccount = "DELETE FROM Accounts WHERE accountID = ?";
+
+        try (
+            Connection connection = ConnectionFactory.getAutoCommitConnect();
+            PreparedStatement tx = connection.prepareStatement(deleteTransaction);
+            PreparedStatement acct = connection.prepareStatement(deleteAccount);
+        ) {
+            String accountId = account.getAccountID().toString();
+            tx.setString(1, accountId);
+            tx.setString(2, accountId);
+            tx.executeUpdate();
+
+            acct.setString(1, accountId);
+            acct.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Method to delete multiple accounts associated with an userID
+     * It will take the UUID of an user
+     * It will delete all the transactions associated with the user
+     */
+    public static void deleteAllAccounts(UUID userId) {
+        String deleteTransaction = """
+            DELETE FROM Transactions
+            WHERE sourceAccountId IN (SELECT accountID FROM Accounts WHERE userID = ?)
+            OR destinationAccountId IN (SELECT accountID FROM Accounts WHERE userID = ?)
+            """;
+        String deleteAccounts = "DELETE FROM Accounts WHERE userID = ?";
+
+        try (
+            Connection connection = ConnectionFactory.getAutoCommitConnect();
+            PreparedStatement tx = connection.prepareStatement(deleteTransaction);
+            PreparedStatement accts = connection.prepareStatement(deleteAccounts);
+        ) {
+            String id = userId.toString();
+            tx.setString(1, id);
+            tx.setString(2, id);
+            tx.executeUpdate();
+
+            accts.setString(1, id);
+            accts.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 }
