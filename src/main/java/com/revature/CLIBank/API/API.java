@@ -29,8 +29,8 @@ public class API {
      * @return boolean, the success of the registration
      */
     public boolean register(String username, String password) {
-        boolean unameStat = AccountValidation.isUserNameValid(username);
-        boolean pwStat = AccountValidation.isPassWordValid(password);
+        boolean unameStat = AccountValidation.isUsernameValid(username);
+        boolean pwStat = AccountValidation.isPasswordValid(password);
 
         if(unameStat && pwStat) {
             User tmpUser = new User(username, 0, password);
