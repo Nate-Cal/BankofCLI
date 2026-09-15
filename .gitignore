@@ -43,3 +43,9 @@ build/
 
 ### Locally produced database ###
 db/
+data/*.db
+
+# Just in case mvnw is not installed and you are using VSCODE
+mvnw
+mvnw.cmd
+.mvn/
