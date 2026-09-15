@@ -135,11 +135,104 @@ public class AccountRepoTest {
 
     }
 
-    // @Test 
-    // void insertTransactionThenFindByAccountId() {
-    //     User user = new User("Owner4", 22, "Pass123!");
-    //     AccountRepo.insertUser(user);
+    @Test 
+    void insertTransactionThenFindByAccountId() {
+        User user = new User("Owner4", 22, "Pass123!");
+        AccountRepo.insertUser(user);
 
-    // }
+        AccountInfo account = new AccountInfo(user.getUserID(), 4444);
+        AccountRepo.insertAccount(account);
 
+        Transaction deposit = new Transaction(account.getAccountID(), TransactionType.DEPOSIT, 500L);
+        repo.insertTransaction(deposit);
+
+        List<Transaction> found = repo.findTransactionsByAccountId(account.getAccountID());
+        assertEquals(1, found.size());
+        assertEquals(deposit.getTransactionId(), found.get(0).getTransactionId());
+        assertEquals(TransactionType.DEPOSIT, found.get(0).getType());
+        assertEquals(500L, found.get(0).getAmount());
+        assertNull(found.get(0).getDestinationAccountId());
+    }
+
+    @Test 
+    void findTransactionsByAccountIdRespectsLimit() {
+        User user = new User("Owner5", 22, "Pass123!");
+        AccountRepo.insertUser(user);
+
+        AccountInfo account = new AccountInfo(user.getUserID(), 5555);
+        AccountRepo.insertAccount(account);
+
+        repo.insertTransaction(new Transaction(account.getAccountID(), TransactionType.DEPOSIT, 100L));
+        repo.insertTransaction(new Transaction(account.getAccountID(), TransactionType.DEPOSIT, 200L));
+        repo.insertTransaction(new Transaction(account.getAccountID(), TransactionType.WITHDRAWAL, 50L));
+
+        List<Transaction> found = repo.findTransactionsByAccountId(account.getAccountID(), 2);
+        assertEquals(2, found.size());
+    }
+
+    @Test 
+    void transferMoneyMovesBalanceAndRecordsTransaction() {
+        User user = new User("Owner6", 35, "Pass123!");
+        AccountRepo.insertUser(user);
+
+        AccountInfo source = new AccountInfo(UUID.randomUUID(), user.getUserID(), 1001, AccountType.CHECKING, 10000L, false);
+        AccountInfo dest = new AccountInfo(UUID.randomUUID(), user.getUserID(), 1002, AccountType.SAVINGS, 0L, false);
+        AccountRepo.insertAccount(source);
+        AccountRepo.insertAccount(dest);
+
+        assertTrue(repo.transferMoney(source, dest, 3000L));
+
+        AccountInfo sourceFound = repo.findAccountById(source.getAccountID());
+        AccountInfo destFound = repo.findAccountById(dest.getAccountID());
+        assertEquals(7000L, sourceFound.getBalance());
+        assertEquals(3000L, destFound.getBalance());
+
+        List<Transaction> ts = repo.findTransactionsByAccountId(source.getAccountID());
+        assertEquals(1, ts.size());
+        assertEquals(TransactionType.TRANSFER, ts.get(0).getType());
+        assertEquals(dest.getAccountID(), ts.get(0).getDestinationAccountId());
+    }
+
+    @Test 
+    void deleteAccountRemovesAccountAndTransactions() {
+        User user = new User("Owner7", 28, "Pass123!");
+        AccountRepo.insertUser(user);
+
+        AccountInfo account = new AccountInfo(user.getUserID(), 7777);
+        AccountRepo.insertAccount(account);
+        repo.insertTransaction(new Transaction(account.getAccountID(), TransactionType.DEPOSIT, 100L));
+
+        AccountRepo.deleteAccount(account);
+
+        assertNull(repo.findAccountById(account.getAccountID()));
+        assertEquals(0, repo.findTransactionsByAccountId(account.getAccountID()).size());
+    }
+
+    @Test 
+    void deleteAllAccountsRemovesThatUsersAccounts() {
+        User user = new User("Owner8", 33, "Pass123!");
+        AccountRepo.insertUser(user);
+
+        AccountRepo.insertAccount(new AccountInfo(user.getUserID(), 1111));
+        AccountRepo.insertAccount(new AccountInfo(user.getUserID(), 2222, AccountType.SAVINGS));
+
+        AccountRepo.deleteAllAccounts(user.getUserID());
+        assertEquals(0, repo.findAccountsByUserId(user.getUserID()).size());
+    }
+
+    @Test
+    void deleteAllAccountsDoesNotRemoveOtherUsersAccounts() {
+        User user1 = new User("Keep", 40, "Pass123!");
+        User user2 = new User("Remove", 41, "Pass123!");
+        AccountRepo.insertUser(user1);
+        AccountRepo.insertUser(user2);
+
+        AccountRepo.insertAccount(new AccountInfo(user1.getUserID(), 1000));
+        AccountRepo.insertAccount(new AccountInfo(user2.getUserID(), 2000));
+
+        AccountRepo.deleteAllAccounts(user2.getUserID());
+
+        assertEquals(0, repo.findAccountsByUserId(user2.getUserID()).size());
+        assertEquals(1, repo.findAccountsByUserId(user1.getUserID()).size());
+    }
 }
