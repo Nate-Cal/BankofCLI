@@ -1,6 +1,9 @@
 package com.revature.CLIBank.BusinessLogic;
 import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.model.AccountInfo;
+import com.revature.CLIBank.model.Transaction;
+import com.revature.CLIBank.model.TransactionType;
+import com.revature.CLIBank.Repository.RepositoryException;
 
 
 public class BankTransactions {
@@ -9,49 +12,84 @@ public class BankTransactions {
     //Mo
     public long deposit(AccountInfo accountInfo, long amount) {
         BankActions bankActions = new BankActions();
-        if (!bankActions.checkDeposit(accountInfo, amount)) {
-            BankLog.outcome(BankLog.Event.DEPOSIT_IN_MEMORY, false, null);
+        if (accountInfo == null || !bankActions.checkDeposit(accountInfo, amount)) {
+            BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
             return 0;
         }
         long balance, newBalance;
         balance = accountInfo.getBalance();
-        newBalance = balance + amount;
+        // Reject overflow instead of storing a wrapped negative balance
+        try { newBalance = Math.addExact(balance, amount); }
+        catch (ArithmeticException e) {
+            BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
+            return 0;
+        }
+        // Only update the in-memory account after BOTH database writes commit
+        if (accountRepo == null) accountRepo = new AccountRepo();
+        try {
+            if (!accountRepo.saveBalanceAndHistory(accountInfo, newBalance,
+                    new Transaction(accountInfo.getAccountID(), TransactionType.DEPOSIT, amount))) {
+                BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
+                return 0;
+            }
+        } catch (RepositoryException e) {
+            BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
+            return 0;
+        }
         accountInfo.setBalance(newBalance);
 
         //return the amount deposited
-        BankLog.outcome(BankLog.Event.DEPOSIT_IN_MEMORY, true, null);
+        BankLog.outcome(BankLog.Event.DEPOSIT, true, null);
         return amount;
     }
 
     //Mo
     public long withdraw(AccountInfo accountInfo, long amount) {
         BankActions bankActions = new BankActions();
-        if(!bankActions.checkWithdraw(accountInfo, amount)){
-            BankLog.outcome(BankLog.Event.WITHDRAWAL_IN_MEMORY, false, null);
+        if(accountInfo == null || !bankActions.checkWithdraw(accountInfo, amount)){
+            BankLog.outcome(BankLog.Event.WITHDRAWAL, false, null);
             return 0;
         }
         long balance, newBalance;
         balance = accountInfo.getBalance();
         newBalance = balance - amount;
+        // Only update the in-memory account after BOTH database writes commit.
+        if (accountRepo == null) accountRepo = new AccountRepo();
+        try {
+            if (!accountRepo.saveBalanceAndHistory(accountInfo, newBalance,
+                    new Transaction(accountInfo.getAccountID(), TransactionType.WITHDRAWAL, amount))) {
+                BankLog.outcome(BankLog.Event.WITHDRAWAL, false, null);
+                return 0;
+            }
+        } catch (RepositoryException e) {
+            BankLog.outcome(BankLog.Event.WITHDRAWAL, false, null);
+            return 0;
+        }
         accountInfo.setBalance(newBalance);
 
-        BankLog.outcome(BankLog.Event.WITHDRAWAL_IN_MEMORY, true, null);
+        BankLog.outcome(BankLog.Event.WITHDRAWAL, true, null);
         return amount;
     }
 
     //Mo
     public synchronized long transfer(AccountInfo sendingAccount, AccountInfo receivingAccount, long amount) {
         BankActions bankActions = new BankActions();
-        if (!bankActions.checkTransfer(sendingAccount, receivingAccount, amount)) {
+        if (sendingAccount == null || receivingAccount == null
+                || sendingAccount.getAccountID() == null || receivingAccount.getAccountID() == null
+                || !bankActions.checkTransfer(sendingAccount, receivingAccount, amount)) {
             BankLog.outcome(BankLog.Event.TRANSFER, false, null);
             return 0;
         }
 
         if (accountRepo == null) //done for unit test
             accountRepo = new AccountRepo();
-        if(accountRepo.transferMoney(sendingAccount, receivingAccount, amount)){
-            BankLog.outcome(BankLog.Event.TRANSFER, true, null);
-            return amount;
+        try {
+            if(accountRepo.transferMoney(sendingAccount, receivingAccount, amount)){
+                BankLog.outcome(BankLog.Event.TRANSFER, true, null);
+                return amount;
+            }
+        } catch (RepositoryException e) {
+            // The repository records the database cause; this records the failed action
         }
         BankLog.outcome(BankLog.Event.TRANSFER, false, null);
         return 0;

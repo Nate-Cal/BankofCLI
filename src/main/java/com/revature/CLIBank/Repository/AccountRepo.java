@@ -1,6 +1,7 @@
 package com.revature.CLIBank.Repository;
 
 import com.revature.CLIBank.Utility.ConnectionFactory;
+import org.slf4j.LoggerFactory;
 import com.revature.CLIBank.model.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -8,6 +9,44 @@ import java.util.*;
 import java.sql.*;
 
 public class AccountRepo {
+
+    /** Log database details once; callers can show a friendly failure message */
+    private static RepositoryException databaseFailure(SQLException cause) {
+        LoggerFactory.getLogger(AccountRepo.class).error("DATABASE operation failed", cause);
+        return new RepositoryException(cause);
+    }
+
+    /**
+     * Save the balance and history together. A history failure rolls back the balance
+     * The expected old balance prevents overwriting a newer change from another request
+     */
+    public boolean saveBalanceAndHistory(AccountInfo account, long newBalance, Transaction transaction) {
+        String sql = "UPDATE Accounts SET balance = ? WHERE accountID = ? AND balance = ? AND frozen = 0";
+        try (Connection connection = ConnectionFactory.getManualCommitConnection()) {
+            try {
+                try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.setLong(1, newBalance);
+                    ps.setString(2, account.getAccountID().toString());
+                    ps.setLong(3, account.getBalance());
+                    if (ps.executeUpdate() != 1) {
+                        connection.rollback();
+                        return false;
+                    }
+                }
+                insertTransaction(connection, transaction);
+                connection.commit();
+                return true;
+            } catch (SQLException e) {
+                try { connection.rollback(); }
+                catch (SQLException rollbackFailure) { e.addSuppressed(rollbackFailure); }
+                throw databaseFailure(e);
+            }
+        } catch (SQLException e) {
+            throw databaseFailure(e);
+        }
+    }
+
+
 
     /**
      * Creates the owners table if it does not exists
@@ -28,7 +67,7 @@ public class AccountRepo {
             simpleStatement.execute(query);
 
         } catch (SQLException exception) {
-            exception.printStackTrace();
+            throw databaseFailure(exception);
         }
     }
 
@@ -49,13 +88,13 @@ public class AccountRepo {
                 );
                 """;
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            Statement simpleStatement = connection.createStatement();
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                Statement simpleStatement = connection.createStatement();
         ) {
             simpleStatement.execute(query);
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
 
     }
@@ -79,13 +118,13 @@ public class AccountRepo {
                 """;
 
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            Statement simpleStatement = connection.createStatement();
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                Statement simpleStatement = connection.createStatement();
         ) {
             simpleStatement.execute(query);
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
     }
 
@@ -105,23 +144,24 @@ public class AccountRepo {
      */
     public static void insertUser(User user) {
         String query = "INSERT INTO Owners (userID, name, age, passWord) VALUES (?, ?, ?, ?)";
-        
+
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement ps = connection.prepareStatement(query);
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query);
         ) {
             ps.setString(1, user.getUserID().toString());
             ps.setString(2, user.getName());
             ps.setInt(3, user.getAge());
             ps.setString(4, user.getPassword());
-            ps.executeUpdate();
+            // Do not report success if SQLite did not insert a row.
+            if (ps.executeUpdate() != 1) throw new SQLException("Insert did not save a row");
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
     }
 
-    /** 
+    /**
      * Method designed to insert an account into the table in the database
      * It will take an Accountinfo object
      */
@@ -130,25 +170,26 @@ public class AccountRepo {
             INSERT INTO Accounts (accountID, userID, pin, accountType, balance, frozen)
             VALUES (?, ?, ?, ?, ?, ?)
             """;
-            try (
+        try (
                 Connection connection = ConnectionFactory.getAutoCommitConnect();
                 PreparedStatement ps = connection.prepareStatement(query);
-            ) {
-                ps.setString(1, account.getAccountID().toString());
-                ps.setString(2, account.getUserID().toString());
-                ps.setInt(3, account.getPin());
-                ps.setString(4, account.getAccountType().name());
-                ps.setLong(5, account.getBalance());
-                ps.setInt(6, account.isFrozen()? 1 : 0);
-                ps.executeUpdate();
-    
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        ) {
+            ps.setString(1, account.getAccountID().toString());
+            ps.setString(2, account.getUserID().toString());
+            ps.setInt(3, account.getPin());
+            ps.setString(4, account.getAccountType().name());
+            ps.setLong(5, account.getBalance());
+            ps.setInt(6, account.isFrozen()? 1 : 0);
+            // Do not report success if SQLite did not insert a row.
+            if (ps.executeUpdate() != 1) throw new SQLException("Insert did not save a row");
+
+        } catch (SQLException e) {
+            throw databaseFailure(e);
+        }
 
     }
 
-    /** 
+    /**
      * Method to insert a transaction with an auto commit
      * It will take a transaction object
      */
@@ -156,21 +197,21 @@ public class AccountRepo {
         try(Connection connection = ConnectionFactory.getAutoCommitConnect()) {
             insertTransaction(connection, transaction);
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
     }
 
-    /** 
+    /**
      * Method designed to insert a transaction into the table
      * It will take a transaction object
-     * It will take a connection object 
+     * It will take a connection object
      */
     private void insertTransaction(Connection connection, Transaction transaction) throws SQLException {
         String query = """
             INSERT INTO Transactions (transactionID, sourceAccountId, destinationAccountId, type, amount, timestamp)
             VALUES (?, ?, ?, ?, ?, ?)
             """;
-        
+
         try (PreparedStatement ps = connection.prepareStatement(query)) {
             ps.setString(1, transaction.getTransactionId().toString());
             ps.setString(2, transaction.getSourceAccountId().toString());
@@ -197,10 +238,10 @@ public class AccountRepo {
      */
     private User mapUser(ResultSet rs) throws SQLException {
         return new User (
-            UUID.fromString(rs.getString("userID")),
-            rs.getString("name"),
-            rs.getInt("age"),
-            rs.getString("passWord")
+                UUID.fromString(rs.getString("userID")),
+                rs.getString("name"),
+                rs.getInt("age"),
+                rs.getString("passWord")
         );
     }
 
@@ -211,12 +252,12 @@ public class AccountRepo {
     private AccountInfo mapAccount(ResultSet rs) throws SQLException {
         String ownerId = rs.getString("userID");
         return new AccountInfo(
-            UUID.fromString(rs.getString("accountID")),
-            ownerId == null ? null : UUID.fromString(ownerId),
-            rs.getInt("pin"),
-            AccountType.valueOf(rs.getString("accountType")),
-            rs.getLong("balance"),
-            rs.getInt("frozen") != 0
+                UUID.fromString(rs.getString("accountID")),
+                ownerId == null ? null : UUID.fromString(ownerId),
+                rs.getInt("pin"),
+                AccountType.valueOf(rs.getString("accountType")),
+                rs.getLong("balance"),
+                rs.getInt("frozen") != 0
         );
     }
 
@@ -226,17 +267,17 @@ public class AccountRepo {
      */
     private Transaction mapTransaction(ResultSet rs) throws SQLException{
         return new Transaction(
-            UUID.fromString(rs.getString("transactionID")),
-            UUID.fromString(rs.getString("sourceAccountId")),
-            rs.getString("destinationAccountId") == null ? null : UUID.fromString(rs.getString("destinationAccountId")),
-            TransactionType.valueOf(rs.getString("type")),
-            rs.getLong("amount"),
-            LocalDateTime.parse(rs.getString("timestamp"))
+                UUID.fromString(rs.getString("transactionID")),
+                UUID.fromString(rs.getString("sourceAccountId")),
+                rs.getString("destinationAccountId") == null ? null : UUID.fromString(rs.getString("destinationAccountId")),
+                TransactionType.valueOf(rs.getString("type")),
+                rs.getLong("amount"),
+                LocalDateTime.parse(rs.getString("timestamp"))
         );
     }
 
 
-    /** 
+    /**
      * Method to find an user by ID
      * will return Null if that record does not exist
      * Return an user object if it finds it
@@ -245,8 +286,8 @@ public class AccountRepo {
         String query = "SELECT * FROM Owners WHERE userID = ?";
 
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement ps = connection.prepareStatement(query);
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query);
         ) {
             ps.setString(1, userID.toString());
             ResultSet rs = ps.executeQuery();
@@ -255,7 +296,7 @@ public class AccountRepo {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
 
         return null;
@@ -269,8 +310,8 @@ public class AccountRepo {
         String query = "SELECT * FROM Owners WHERE name = ? AND passWord = ?";
 
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement ps = connection.prepareStatement(query);
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query);
         ) {
             ps.setString(1, name);
             ps.setString(2, passWord);
@@ -280,12 +321,12 @@ public class AccountRepo {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
         return null;
     }
-    
-    /** 
+
+    /**
      * Method to find an account by ID
      * Return null if the record does not exists
      * Return the AccountInfo object if it finds it
@@ -294,8 +335,8 @@ public class AccountRepo {
         String query = "SELECT * FROM Accounts WHERE accountID = ?";
 
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement ps = connection.prepareStatement(query);
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query);
         ) {
 
             ps.setString(1, accountID.toString());
@@ -305,7 +346,7 @@ public class AccountRepo {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
 
         return null;
@@ -321,8 +362,8 @@ public class AccountRepo {
         List<AccountInfo> accounts = new ArrayList<>();
 
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement ps = connection.prepareStatement(query);
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query);
         ) {
             ps.setString(1, userID.toString());
             ResultSet rs = ps.executeQuery();
@@ -331,14 +372,14 @@ public class AccountRepo {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
 
         return accounts;
     }
 
 
-    /** 
+    /**
      * Method to find the transactions by account ID
      * Return a list of transaction objects
      */
@@ -354,7 +395,7 @@ public class AccountRepo {
         String query = """
             SELECT * FROM Transactions
             WHERE sourceAccountId = ? OR destinationAccountId = ?
-            ORDER BY timestamp DESC
+            ORDER BY timestamp DESC, transactionID DESC
         """;
         if (limit > 0) {
             query += " LIMIT ?";
@@ -362,8 +403,8 @@ public class AccountRepo {
         List<Transaction> transactions = new ArrayList<>();
 
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement ps = connection.prepareStatement(query);
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query);
         ) {
             ps.setString(1, accountID.toString());
             ps.setString(2, accountID.toString());
@@ -376,13 +417,13 @@ public class AccountRepo {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
         return transactions;
     }
 
 
-    /** 
+    /**
      * Method to update an user in the database
      * It will take an User object
      */
@@ -390,8 +431,8 @@ public class AccountRepo {
         String query = "UPDATE Owners SET name = ?, age = ?, passWord = ? WHERE userID = ?";
 
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement ps = connection.prepareStatement(query)
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query)
         ) {
 
             ps.setString(1, user.getName());
@@ -400,7 +441,7 @@ public class AccountRepo {
             ps.setString(4, user.getUserID().toString());
             ps.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
     }
 
@@ -415,8 +456,8 @@ public class AccountRepo {
             WHERE accountID = ? 
             """;
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement ps = connection.prepareStatement(query)
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query)
         ) {
             ps.setString(1, account.getUserID().toString());
             ps.setInt(2, account.getPin());
@@ -427,7 +468,7 @@ public class AccountRepo {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
     }
 
@@ -438,14 +479,17 @@ public class AccountRepo {
      * It will return a boolean between whether the transaction was succesfully made or not
      */
     public boolean transferMoney(AccountInfo source, AccountInfo dest, long amount) {
-        String addSQL = "UPDATE Accounts SET balance = balance + ? WHERE accountID = ?";
-        String withdrawSQL = "UPDATE Accounts SET balance = balance - ? WHERE accountID = ?";
+        // Compare stored balances too, because another request may have changed them.
+        if (amount <= 0 || source.getBalance() < amount || dest.getBalance() > Long.MAX_VALUE - amount) return false;
+        String addSQL = "UPDATE Accounts SET balance = balance + ? WHERE accountID = ? AND balance = ? AND frozen = 0";
+        String withdrawSQL = "UPDATE Accounts SET balance = balance - ? WHERE accountID = ? AND balance = ? AND frozen = 0";
 
         try (Connection connection = ConnectionFactory.getManualCommitConnection()) {
             try {
                 try(PreparedStatement ps = connection.prepareStatement(withdrawSQL)) {
                     ps.setLong(1, amount);
                     ps.setString(2, source.getAccountID().toString());
+                    ps.setLong(3, source.getBalance());
                     if (ps.executeUpdate() != 1) {
                         throw new SQLException("Withdrawing money from account failed");
                     }
@@ -454,6 +498,7 @@ public class AccountRepo {
                 try(PreparedStatement ps2 = connection.prepareStatement(addSQL)) {
                     ps2.setLong(1, amount);
                     ps2.setString(2, dest.getAccountID().toString());
+                    ps2.setLong(3, dest.getBalance());
 
                     if(ps2.executeUpdate() != 1) {
                         throw new SQLException("Adding money to account failed");
@@ -461,10 +506,10 @@ public class AccountRepo {
                 }
 
                 insertTransaction(connection, new Transaction(
-                    source.getAccountID(),
-                    dest.getAccountID(),
-                    TransactionType.TRANSFER,
-                    amount
+                        source.getAccountID(),
+                        dest.getAccountID(),
+                        TransactionType.TRANSFER,
+                        amount
                 ));
 
                 connection.commit();
@@ -473,12 +518,10 @@ public class AccountRepo {
                 return true;
             } catch (SQLException e) {
                 connection.rollback();
-                e.printStackTrace();
-                return false;
+                throw databaseFailure(e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw databaseFailure(e);
         }
     }
 
@@ -496,10 +539,10 @@ public class AccountRepo {
         String deleteAccount = "DELETE FROM Accounts WHERE accountID = ?";
 
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            Statement pragma = connection.createStatement();
-            PreparedStatement tx = connection.prepareStatement(deleteOwnTransactions);
-            PreparedStatement acct = connection.prepareStatement(deleteAccount);
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                Statement pragma = connection.createStatement();
+                PreparedStatement tx = connection.prepareStatement(deleteOwnTransactions);
+                PreparedStatement acct = connection.prepareStatement(deleteAccount);
         ) {
             pragma.execute("PRAGMA foreign_keys = OFF");
             String accountId = account.getAccountID().toString();
@@ -508,14 +551,14 @@ public class AccountRepo {
             acct.setString(1, accountId);
             acct.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
     }
 
     /**
      * Deletes every account owned by the user
      * Own deposits, withdrawals, and transfers between this user's accounts are removed
-     * Transfers with another user's account are kept for that other account.
+     * Transfers with another user's account are kept for that other account
      */
     public static void deleteAllAccounts(UUID userId) {
         String deleteOwnTransactions = """
@@ -529,10 +572,10 @@ public class AccountRepo {
         String deleteAccounts = "DELETE FROM Accounts WHERE userID = ?";
 
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            Statement pragma = connection.createStatement();
-            PreparedStatement tx = connection.prepareStatement(deleteOwnTransactions);
-            PreparedStatement accts = connection.prepareStatement(deleteAccounts);
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                Statement pragma = connection.createStatement();
+                PreparedStatement tx = connection.prepareStatement(deleteOwnTransactions);
+                PreparedStatement accts = connection.prepareStatement(deleteAccounts);
         ) {
             pragma.execute("PRAGMA foreign_keys = OFF");
             tx.setString(1, userId.toString());
@@ -541,7 +584,7 @@ public class AccountRepo {
             accts.setString(1, userId.toString());
             accts.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw databaseFailure(e);
         }
     }
 

@@ -3,6 +3,7 @@ import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.Utility.Money;
 import com.revature.CLIBank.model.AccountInfo;
 import com.revature.CLIBank.BusinessLogic.BankTransactions;
+import com.revature.CLIBank.BusinessLogic.BankLog;
 import java.math.BigDecimal;
 import java.util.Scanner ;
 
@@ -36,8 +37,9 @@ public class AccountInterface {
             {
                 System.out.println("Deposit failed.");
             }
-        } catch (NumberFormatException ex) {
-            System.out.println("Invalid input. Please enter a valid number." + ex.toString());
+        } catch (IllegalArgumentException ex) {
+            BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
+            System.out.println("Invalid input. Please enter a valid number.");
         }
 
     }
@@ -67,11 +69,12 @@ public class AccountInterface {
             {
                 System.out.println("Withdrawal failed.");
             }
-            } catch(NumberFormatException ex){
-                System.out.println("Invalid input. Please enter a valid number.");
-            }
-
+        } catch(IllegalArgumentException ex){
+            BankLog.outcome(BankLog.Event.WITHDRAWAL, false, null);
+            System.out.println("Invalid input. Please enter a valid number.");
         }
+
+    }
 
 
     //Mo
@@ -86,7 +89,8 @@ public class AccountInterface {
             BigDecimal amountDecimal = new BigDecimal(amountStr);
 
             long amount = Money.toCents(amountStr);
-            //bankTransactions = new BankTransactions();
+            // Keep injected test instances; initialize the normal interactive path
+            if (bankTransactions == null) bankTransactions = new BankTransactions();
             long amountTransferred = bankTransactions.transfer(sendingAccount, receivingAccount, amount);
 
             if (amountTransferred > 0) {
@@ -100,7 +104,8 @@ public class AccountInterface {
             {
                 System.out.println("Transfer failed.");
             }
-        } catch (NumberFormatException ex) {
+        } catch (IllegalArgumentException ex) {
+            BankLog.outcome(BankLog.Event.TRANSFER, false, null);
             System.out.println("Invalid input. Please enter a valid number.");
         }
 

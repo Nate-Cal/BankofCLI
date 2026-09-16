@@ -1,58 +1,63 @@
 package com.revature.CLIBank;
 
 import com.revature.CLIBank.API.*;
+import com.revature.CLIBank.BusinessLogic.BankLog;
+import com.revature.CLIBank.Repository.RepositoryException;
 
 import java.util.*;
 
 public class CLIBank {
     private static final String usage =
-    """
-    usage CLIBank [-h] | [batch <command> -u <username> -p <password>]
-    """;
+            """
+            usage CLIBank [-h] | [batch <command> -u <username> -p <password>]
+            """;
 
     private static final String prompt = "CLIBank> ";
 
     private static final String logo =
-    """
-    ____              _             __    _____ _      _____\s
-   |  _ \\            | |           / _|  / ____| |    |_   _|
-   | |_) | __ _ _ __ | | __   ___ | |_  | |    | |      | | \s
-   |  _ < / _` | '_ \\| |/ /  / _ \\|  _| | |    | |      | | \s
-   | |_) | (_| | | | |   <  | (_) | |   | |____| |____ _| |_\s
-   |____/ \\__,_|_| |_|_|\\_\\  \\___/|_|    \\_____|______|_____|
-   """;
+            """
+            ____              _             __    _____ _      _____\s
+           |  _ \\            | |           / _|  / ____| |    |_   _|
+           | |_) | __ _ _ __ | | __   ___ | |_  | |    | |      | | \s
+           |  _ < / _` | '_ \\| |/ /  / _ \\|  _| | |    | |      | | \s
+           | |_) | (_| | | | |   <  | (_) | |   | |____| |____ _| |_\s
+           |____/ \\__,_|_| |_|_|\\_\\  \\___/|_|    \\_____|______|_____|
+           """;
 
     protected static final String helpTxt =
-    """
-    Bank of CLI shell commands:
-    
-    help/?: Show this help
-    accounts: List your accounts
-    transactions <your account> [optional: n]: List recent transactions
-    create <PIN> <checking|savings>: create a new account
-    delete <your account> <PIN>: delete an account
-    deposit <your account> <amount>: Add money
-    withdraw <your account> <amount>: Remove money
-    transfer <your account> <recipient account number> <amount>: Transfer money
-    exit/quit: End your session
-    """;
+            """
+            Bank of CLI shell commands:
+            
+            help/?: Show this help
+            accounts: List your accounts
+            transactions <your account> [optional: n]: List recent transactions
+            create <PIN> <checking|savings>: create a new account
+            delete <your account> <PIN>: delete an account
+            deposit <your account> <amount>: Add money
+            withdraw <your account> <amount>: Remove money
+            transfer <your account> <recipient account number> <amount>: Transfer money
+            exit/quit: End your session
+            """;
 
     private static API api;
+    // Share one reader so a menu does not consume another menu's input.
+    private static final Scanner input = new Scanner(System.in);
 
     protected static void printError(String str) {
+        BankLog.outcome(BankLog.Event.INPUT, false, null);
         System.err.println(str);
         System.err.println();
     }
 
     protected static void register() {
         String username, password;
-        Scanner sc = new Scanner(System.in);
+        Scanner sc = input;
         boolean registered; //Mo
 
 
         do {
             //if(api.getUser() == null && api.getResult() != null)
-                //System.out.print(api.getResult());
+            //System.out.print(api.getResult());
             // I removed this because the login error was showing up again when I
             // selected N. interactive() already prints the login error, so register()
             // was printing the same old message a second time.
@@ -79,7 +84,7 @@ public class CLIBank {
     }
 
     protected static boolean login() {
-        Scanner sc = new Scanner(System.in);
+        Scanner sc = input;
 
         System.out.println("Bank of CLI Login");
         System.out.print("Username: ");
@@ -131,26 +136,29 @@ public class CLIBank {
         } else if (cmd.equalsIgnoreCase("withdraw")) {
             try {
                 api.withdraw(args.get(1), args.get(2));
+                System.out.println(api.getResult());
             } catch (Exception e) {
                 if (e instanceof IndexOutOfBoundsException) {
                     printError("Syntax error: too few arguments");
                 }
             }
+        } else if (cmd.equalsIgnoreCase("transfer")) {
+            if (args.size() != 4) { printError("Use: transfer <source> <destination> <amount>"); return; }
+            api.transfer(args.get(1), args.get(2), args.get(3));
+            System.out.println(api.getResult());
         } else if (cmd.equalsIgnoreCase("transactions")) {
-            if (args.size() == 1) {
-                api.getTransactions();
-            } else if(args.size() == 2) {
-                api.getTransactions(100);
-            } else if (args.size() == 3) {
-                int stagedRows = Integer.parseInt(args.get(1));
-                if (stagedRows <= 1000) {
+            // The account is a UUID; only the optional row count is a number
+            try {
+                if (args.size() == 1) api.getTransactions(100);
+                else if (args.size() == 2) api.getAcctTransactions(args.get(1), 100);
+                else if (args.size() == 3) {
                     int rows = Integer.parseInt(args.get(2));
-                    if(rows < 0) rows = 0;
+                    if (rows < 0 || rows > 1000) { printError("Choose 0 to 1000 rows."); return; }
                     api.getAcctTransactions(args.get(1), rows);
-                    System.out.print(api.getResult());
-                }
-            } else {
-                printError("Syntax error");
+                } else { printError("Use: transactions [account] [rows]"); return; }
+                System.out.print(api.getResult());
+            } catch (NumberFormatException e) {
+                printError("The row count must be a whole number.");
             }
         } else if(cmd.equalsIgnoreCase("help") || cmd.equals("?")) {
             System.out.println(helpTxt);
@@ -160,7 +168,7 @@ public class CLIBank {
     }
 
     protected static void interactive() {
-        Scanner sc = new Scanner(System.in);
+        Scanner sc = input;
         System.out.print(logo);
 
         boolean status = false;
@@ -190,7 +198,8 @@ public class CLIBank {
     public static void main(String[] args) {
         List<String> arguments = Arrays.asList(args);
 
-        api = new API();
+        try { api = new API(); }
+        catch (RepositoryException e) { printError("Service unavailable. Please try again."); return; }
 
         if(arguments.isEmpty()) {
             interactive();
@@ -202,14 +211,18 @@ public class CLIBank {
         }
 
         if(arguments.getFirst().equalsIgnoreCase("batch")) {
-            try {
-                api.login(arguments.get(3), arguments.get(5));
-            } catch(IndexOutOfBoundsException e) {
-                printError("Syntax error. Exiting.");
+            // Locate credential flags after commands of different lengths
+            int u = arguments.indexOf("-u");
+            int p = arguments.indexOf("-p");
+            if (u < 2 || p != u + 2 || p + 1 != arguments.size() - 1) {
+                printError("Use: batch <command> -u <username> -p <password>");
                 return;
             }
-
-            exec(arguments.subList(1, arguments.size()));
+            if (!api.login(arguments.get(u + 1), arguments.get(p + 1))) {
+                printError(api.getResult());
+                return;
+            }
+            exec(arguments.subList(1, u));
         }
 
     }

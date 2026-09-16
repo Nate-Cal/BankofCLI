@@ -25,10 +25,10 @@ class BankLogTest {
     @AfterEach void detach() { logger.detachAppender(events); events.stop(); }
 
     @Test void successUsesInfo() {
-        BankLog.outcome(BankLog.Event.DEPOSIT_IN_MEMORY, true, null);
+        BankLog.outcome(BankLog.Event.DEPOSIT, true, null);
         assertEquals(1, events.list.size());
         assertEquals(Level.INFO, events.list.getFirst().getLevel());
-        assertEquals("DEPOSIT_IN_MEMORY succeeded", events.list.getFirst().getFormattedMessage());
+        assertEquals("DEPOSIT succeeded", events.list.getFirst().getFormattedMessage());
     }
     @Test void rejectionUsesError() {
         BankLog.outcome(BankLog.Event.LOGIN, false, null);
@@ -48,9 +48,10 @@ class BankLogTest {
 
     @Test void depositLogsAfterBalanceChanges() {
         AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
+        com.revature.CLIBank.TestAccounts.save(account);
         assertEquals(50L, new BankTransactions().deposit(account, 50L));
         assertEquals(50L, account.getBalance());
-        assertEquals("DEPOSIT_IN_MEMORY succeeded", events.list.getFirst().getFormattedMessage());
+        assertEquals("DEPOSIT succeeded", events.list.getFirst().getFormattedMessage());
     }
     @Test void depositRejectionKeepsBalance() {
         AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
@@ -61,18 +62,19 @@ class BankLogTest {
     @Test void withdrawalLogsSuccess() {
         AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
         account.setBalance(100L);
+        com.revature.CLIBank.TestAccounts.save(account);
         assertEquals(50L, new BankTransactions().withdraw(account, 50L));
         assertEquals(50L, account.getBalance());
-        assertEquals("WITHDRAWAL_IN_MEMORY succeeded", events.list.getFirst().getFormattedMessage());
+        assertEquals("WITHDRAWAL succeeded", events.list.getFirst().getFormattedMessage());
     }
     @Test void overdraftLogsFailure() {
         AccountInfo account = new AccountInfo(UUID.randomUUID(), 1234);
         assertEquals(0L, new BankTransactions().withdraw(account, 50L));
         assertEquals(Level.ERROR, events.list.getFirst().getLevel());
     }
-    @Test void unexpectedFailureKeepsExistingBehavior() {
-        assertThrows(NullPointerException.class, () -> new BankTransactions().deposit(null, 50L));
-        assertTrue(events.list.isEmpty()); // No new exception handler in Mo's methods.
+    @Test void nullAccountIsRejectedAndLogged() {
+        assertEquals(0L, new BankTransactions().deposit(null, 50L));
+        assertEquals(Level.ERROR, events.list.getFirst().getLevel());
     }
     @Test void transferLogsRepositorySuccess() {
         AccountInfo from = new AccountInfo(UUID.randomUUID(), 1234);

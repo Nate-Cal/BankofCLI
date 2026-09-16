@@ -22,6 +22,9 @@ public class AccountRepoTest {
 
     @BeforeEach
     void setUp() {
+        // Prevent table cleanup from touching the application's real database.
+        if (!"jdbc:sqlite:./data/test-bank.db".equals(System.getenv("DATABASE-PATH")))
+            throw new IllegalStateException("Run tests through Maven with the test database.");
         repo = new AccountRepo();
         repo.initSchema();
         wipeTables();

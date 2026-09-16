@@ -4,7 +4,8 @@ import com.revature.CLIBank.BusinessLogic.*;
 import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.model.*;
 
-import java.util.Arrays;
+import com.revature.CLIBank.Repository.RepositoryException;
+import com.revature.CLIBank.Utility.Money;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,21 +32,35 @@ public class API {
      * @return boolean, the success of the registration
      */
     public boolean register(String username, String password) {
-        boolean unameStat = AccountValidation.isUsernameValid(username);
-        boolean pwStat = AccountValidation.isPasswordValid(password);
+        // Report failures without exposing technical details or logging credentials
+        try {
+            boolean unameStat = username != null && AccountValidation.isUsernameValid(username);
+            boolean pwStat = password != null && AccountValidation.isPasswordValid(password);
 
-        if(unameStat && pwStat) {
-            User tmpUser = new User(username, 0, password);
-            AccountRepo.insertUser(tmpUser);
-        } else {
-            this.result =
-             """
-             Username must include 1 Uppercase, 1 Lowercase, and must be between 8 and 16 characters.
-             Password must include 1 Uppercase, 1 Lowercase, 1 number, 1 special character, and be 16-24 characters.
-             """;
+            if(unameStat && pwStat) {
+                User tmpUser = new User(username, 0, password);
+                AccountRepo.insertUser(tmpUser);
+                this.result = "Registration successful.";
+                BankLog.outcome(BankLog.Event.REGISTRATION, true, null);
+            } else {
+                this.result =
+                        """
+                        Username must include 1 Uppercase, 1 Lowercase, and must be between 8 and 16 characters.
+                        Password must include 1 Uppercase, 1 Lowercase, 1 number, 1 special character, and be 16-24 characters.
+                        """;
+            }
+
+            if (!(unameStat && pwStat)) BankLog.outcome(BankLog.Event.REGISTRATION, false, null);
+            return unameStat && pwStat;
+        } catch (RepositoryException e) {
+            this.result = "Service unavailable. Please try again.";
+            BankLog.outcome(BankLog.Event.REGISTRATION, false, null);
+            return false;
+        } catch (IllegalArgumentException e) {
+            this.result = "Invalid input. Please check your request.";
+            BankLog.outcome(BankLog.Event.REGISTRATION, false, null);
+            return false;
         }
-
-        return unameStat && pwStat;
     }
 
     /**
@@ -59,56 +74,123 @@ public class API {
      * @return boolean, the success of the login attempt
      */
     public boolean login(String username, String password) {
-        boolean uEmpty = username.isEmpty();
-        boolean pEmpty = password.isEmpty();
+        // Report failures without exposing technical details or logging credentials
+        try {
+            // A failed login must not keep a previous user's session
+            this.user = null;
+            boolean uEmpty = username == null || username.isEmpty();
+            boolean pEmpty = password == null || password.isEmpty();
 
-        if(pEmpty) this.result = "Please enter a password";
-        if(uEmpty) this.result = "Please enter a username";
-        if(uEmpty || pEmpty) return false;
+            if(pEmpty) this.result = "Please enter a password";
+            if(uEmpty) this.result = "Please enter a username";
+            if(uEmpty || pEmpty) {
+                BankLog.outcome(BankLog.Event.LOGIN, false, null);
+                return false;
+            }
 
-        User stagedUser = new User(username, password);
+            User stagedUser = new User(username, password);
 
-        if(stagedUser.exists) {
-            this.user = stagedUser;
-            this.result = "Login successful.";
-        } else {
-            this.result = "Login failed. Try again.";
+            if(stagedUser.exists) {
+                this.user = stagedUser;
+                this.result = "Login successful.";
+            } else {
+                this.result = "Login failed. Try again.";
+            }
+
+            BankLog.outcome(BankLog.Event.LOGIN, stagedUser.exists, null);
+            return stagedUser.exists;
+        } catch (RepositoryException e) {
+            this.result = "Service unavailable. Please try again.";
+            BankLog.outcome(BankLog.Event.LOGIN, false, null);
+            return false;
+        } catch (IllegalArgumentException e) {
+            this.result = "Invalid input. Please check your request.";
+            BankLog.outcome(BankLog.Event.LOGIN, false, null);
+            return false;
         }
-
-        return stagedUser.exists;
     }
 
     public void deposit(String acct, String amount) {
-        AccountInfo ai = new AccountInfo(UUID.fromString(acct));
-        long specBalance = parseMoney(amount);
+        // Report failures without exposing technical details or logging credentials
+        try {
+            AccountInfo ai = new AccountInfo(UUID.fromString(acct));
+            // Reject an account outside the current session before changing money
+            if (this.user == null || !this.user.getUserID().equals(ai.getUserID())) {
+                this.result = "Please log in and choose one of your own accounts.";
+                BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
+                return;
+            }
+            long specBalance = parseMoney(amount);
 
-        if(specBalance == 0 || this.bankTransactions.deposit(ai, specBalance) == 0) {
-            this.result = "No money was deposited. Check your prompt again.";
-        } else {
-            this.result = "$" + specBalance / 100 + "." + specBalance % 100 + " successfully deposited into "
-                    + ai.getAccountID().toString() + ".";
+            if(this.bankTransactions.deposit(ai, specBalance) == 0) {
+                this.result = "No money was deposited. Check your prompt again.";
+            } else {
+                this.result = "$" + Money.fromCents(specBalance) + " successfully deposited into "
+                        + ai.getAccountID().toString() + ".";
+            }
+        } catch (RepositoryException e) {
+            this.result = "Service unavailable. Please try again.";
+            BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
+            return;
+        } catch (IllegalArgumentException e) {
+            this.result = "Invalid input. Please check your request.";
+            BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
+            return;
         }
     }
 
     public void withdraw(String acct, String amount) {
-        AccountInfo ai = new AccountInfo(UUID.fromString(acct));
-        long specBalance = parseMoney(amount);
+        // Report failures without exposing technical details or logging credentials
+        try {
+            AccountInfo ai = new AccountInfo(UUID.fromString(acct));
+            // Reject an account outside the current session before changing money
+            if (this.user == null || !this.user.getUserID().equals(ai.getUserID())) {
+                this.result = "Please log in and choose one of your own accounts.";
+                BankLog.outcome(BankLog.Event.WITHDRAWAL, false, null);
+                return;
+            }
+            long specBalance = parseMoney(amount);
 
-        if(specBalance == 0 || this.bankTransactions.withdraw(ai, specBalance) == 0) {
-            this.result = "No money was withdrawn. Check your prompt again.";
-        } else {
-            this.result = "$" + specBalance / 100 + "." + specBalance % 100 + " successfully withdrawn from "
-                    + ai.getAccountID().toString() + ".";
+            if(this.bankTransactions.withdraw(ai, specBalance) == 0) {
+                this.result = "No money was withdrawn. Check your prompt again.";
+            } else {
+                this.result = "$" + Money.fromCents(specBalance) + " successfully withdrawn from "
+                        + ai.getAccountID().toString() + ".";
+            }
+        } catch (RepositoryException e) {
+            this.result = "Service unavailable. Please try again.";
+            BankLog.outcome(BankLog.Event.WITHDRAWAL, false, null);
+            return;
+        } catch (IllegalArgumentException e) {
+            this.result = "Invalid input. Please check your request.";
+            BankLog.outcome(BankLog.Event.WITHDRAWAL, false, null);
+            return;
         }
     }
 
     public void transfer(String src, String dest, String amount) {
-        String[] parts = amount.split("..");
-        AccountInfo srcAcct = new AccountInfo(UUID.fromString(src));
-        AccountInfo destAcct = new AccountInfo(UUID.fromString(dest));
-
-        this.bankTransactions.transfer(srcAcct, destAcct,
-                100*Long.parseLong(parts[0]) + Long.parseLong(parts[1]));
+        // Report failures without exposing technical details or logging credentials
+        try {
+            // Use the same amount parser as deposits/withdrawals
+            long money = parseMoney(amount);
+            AccountInfo srcAcct = new AccountInfo(UUID.fromString(src));
+            AccountInfo destAcct = new AccountInfo(UUID.fromString(dest));
+            if (this.user == null || !this.user.getUserID().equals(srcAcct.getUserID())) {
+                this.result = "You do not own the source account.";
+                BankLog.outcome(BankLog.Event.TRANSFER, false, null);
+                return;
+            }
+            this.result = this.bankTransactions.transfer(srcAcct, destAcct, money) == 0
+                    ? "No money was transferred." : "Transfer successful.";
+        } catch (RepositoryException e) {
+            this.result = "Service unavailable. Please try again.";
+            BankLog.outcome(BankLog.Event.TRANSFER, false, null);
+            return;
+        } catch (IllegalArgumentException e) {
+            this.result = "Invalid input. Please check your request.";
+            BankLog.outcome(BankLog.Event.TRANSFER, false, null);
+            return;
+        }
     }
 
     /**
@@ -122,35 +204,23 @@ public class API {
      *              rows < 0: return all rows.
      */
     public void getAcctTransactions(String acct, int rows) {
-        if(rows == 0) { this.result = ""; return; }
-
-        List<AccountInfo> accounts = this.user.getAccounts();
-        StringBuilder sb = new StringBuilder();
-
-        for(AccountInfo ac : accounts) {
-            if(ac.getAccountID().toString().equals(acct)) {
-                List<Transaction> listTransactions;
-
-                if(rows > 0) listTransactions = ac.getTransactions(rows);
-                else listTransactions = ac.getTransactions();
-
-                try {
-                    for (Transaction t : listTransactions) {
-                        sb.append(t.getSourceAccountId());
-                        sb.append(" ");
-                        sb.append(t.getDestinationAccountId());
-                        sb.append(" ");
-                        sb.append(t.getAmount());
-                        sb.append(" ");
-                        sb.append(t.getTimestamp());
-                        sb.append("\n");
-                    }
-                } catch (NullPointerException npe) {
-                    sb.append("Warning: null transaction.\n");
-                }
+        // Business layer handles ownership, ordering and the history event
+        if (rows == 0) { this.result = ""; return; }
+        try {
+            List<Transaction> transactions = new TransactionHistory().get(this.user, acct, rows);
+            StringBuilder sb = new StringBuilder();
+            for (Transaction t : transactions) {
+                sb.append(t.getType()).append(" $").append(Money.fromCents(t.getAmount()))
+                        .append(" ").append(t.getSourceAccountId());
+                if (t.getDestinationAccountId() != null) sb.append(" -> ").append(t.getDestinationAccountId());
+                sb.append(" ").append(t.getTimestamp()).append("\n");
             }
+            this.result = transactions.isEmpty() ? "No transactions yet." : sb.toString();
+        } catch (RepositoryException e) {
+            this.result = "Transaction history is unavailable. Please try again.";
+        } catch (IllegalArgumentException e) {
+            this.result = "Please log in and choose one of your accounts with a valid account number.";
         }
-        this.result = sb.toString();
     }
 
     /**
@@ -160,31 +230,11 @@ public class API {
      * @author Nicholas DiGirolamo
      */
     public void getTransactions() {
-        List<AccountInfo> accounts = this.user.getAccounts();
-        StringBuilder sb = new StringBuilder();
-
-        if(accounts.isEmpty()) {
-            this.result = "You have no accounts. Open one to see information.";
-            return;
-        }
-
-        for(AccountInfo ai : accounts) {
-            getAcctTransactions(ai.getAccountID().toString(), -1);
-            sb.append(this.result);
-        }
-
-        this.result = sb.toString();
+        getAcctTransactions(null, -1);
     }
 
     public void getTransactions(int rows) {
-        this.getTransactions();
-        String[] subrange = Arrays.copyOf(this.result.split("\n"), rows);
-        StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < rows; i++) {
-            sb.append(subrange[i]);
-            sb.append("\n");
-        }
-        this.result = sb.toString();
+        getAcctTransactions(null, rows);
     }
 
     /**
@@ -194,47 +244,101 @@ public class API {
      * @author Nicholas DiGirolamo
      */
     public void getAccts() {
-        StringBuilder sb = new StringBuilder();
-        List<AccountInfo> accts = this.user.getAccounts();
-
-        sb.append("Your accounts: ");
-        sb.append(accts.size());
-        sb.append("\n");
-        sb.append("Account number/Type/Balance\n");
-        for(AccountInfo ac : accts) {
-            sb.append(ac.getAccountID());
-            sb.append(" ");
-            sb.append(ac.getAccountType());
-            sb.append(" ");
-            sb.append(ac.getBalance());
-            sb.append("\n");
+        // Report failures without exposing technical details or logging credentials
+        if (this.user == null) {
+            this.result = "Please log in first.";
+            BankLog.outcome(BankLog.Event.ACCOUNTS, false, null);
+            return;
         }
-        this.result = sb.toString();
+        try {
+            StringBuilder sb = new StringBuilder();
+            List<AccountInfo> accts = this.user.getAccounts();
+
+            sb.append("Your accounts: ");
+            sb.append(accts.size());
+            sb.append("\n");
+            sb.append("Account number/Type/Balance\n");
+            for(AccountInfo ac : accts) {
+                sb.append(ac.getAccountID());
+                sb.append(" ");
+                sb.append(ac.getAccountType());
+                sb.append(" ");
+                sb.append("$").append(Money.fromCents(ac.getBalance()));
+                sb.append("\n");
+            }
+            this.result = sb.toString();
+            BankLog.outcome(BankLog.Event.ACCOUNTS, true, null);
+        } catch (RepositoryException e) {
+            this.result = "Service unavailable. Please try again.";
+            BankLog.outcome(BankLog.Event.ACCOUNTS, false, null);
+            return;
+        } catch (IllegalArgumentException e) {
+            this.result = "Invalid input. Please check your request.";
+            BankLog.outcome(BankLog.Event.ACCOUNTS, false, null);
+            return;
+        }
     }
 
     public void creatAcct(String pin, String type) {
-        AccountType at = validateAcctType(type);
-        if(at == null) return;
+        // Report failures without exposing technical details or logging credentials
+        if (this.user == null) {
+            this.result = "Please log in first.";
+            BankLog.outcome(BankLog.Event.ACCOUNT_CREATE, false, null);
+            return;
+        }
+        try {
+            AccountType at = validateAcctType(type);
+            if(at == null) { BankLog.outcome(BankLog.Event.ACCOUNT_CREATE, false, null); return; }
 
-        int correctPin = validatePin(pin);
-        if(correctPin == -1) return;
+            int correctPin = validatePin(pin);
+            if(correctPin == -1) { BankLog.outcome(BankLog.Event.ACCOUNT_CREATE, false, null); return; }
 
-        AccountInfo ai = new AccountInfo(this.user.getUserID(), correctPin, at);
-        AccountRepo.insertAccount(ai);
-        this.result = "Account successfully created.\nAccount number: " + ai.getAccountID();
+            AccountInfo ai = new AccountInfo(this.user.getUserID(), correctPin, at);
+            AccountRepo.insertAccount(ai);
+            this.result = "Account successfully created.\nAccount number: " + ai.getAccountID();
+            BankLog.outcome(BankLog.Event.ACCOUNT_CREATE, true, null);
+        } catch (RepositoryException e) {
+            this.result = "Service unavailable. Please try again.";
+            BankLog.outcome(BankLog.Event.ACCOUNT_CREATE, false, null);
+            return;
+        } catch (IllegalArgumentException e) {
+            this.result = "Invalid input. Please check your request.";
+            BankLog.outcome(BankLog.Event.ACCOUNT_CREATE, false, null);
+            return;
+        }
     }
 
     public void deleteAcct(String uuid, String pin) {
-        UUID id = UUID.fromString(uuid);
-        int corrPin = validatePin(pin);
-
-        for(AccountInfo ai : user.getAccounts()) {
-            if(ai.getPin() == corrPin && ai.getAccountID() == id) {
-                AccountRepo.deleteAccount(ai);
-                this.result = "Successfully deleted account " + uuid;
-            }
+        // Report failures without exposing technical details or logging credentials
+        if (this.user == null) {
+            this.result = "Please log in first.";
+            BankLog.outcome(BankLog.Event.ACCOUNT_DELETE, false, null);
+            return;
         }
-        this.result = "Did not delete account " + uuid + ". Try again.";
+        try {
+            UUID id = UUID.fromString(uuid);
+            int corrPin = validatePin(pin);
+
+            for(AccountInfo ai : user.getAccounts()) {
+                if(ai.getPin() == corrPin && ai.getAccountID().equals(id)) {
+                    AccountRepo.deleteAccount(ai);
+                    this.result = "Successfully deleted account " + uuid;
+                    // Stop here so a successful result is not replaced by a failure.
+                    BankLog.outcome(BankLog.Event.ACCOUNT_DELETE, true, null);
+                    return;
+                }
+            }
+            this.result = "Did not delete account " + uuid + ". Try again.";
+            BankLog.outcome(BankLog.Event.ACCOUNT_DELETE, false, null);
+        } catch (RepositoryException e) {
+            this.result = "Service unavailable. Please try again.";
+            BankLog.outcome(BankLog.Event.ACCOUNT_DELETE, false, null);
+            return;
+        } catch (IllegalArgumentException e) {
+            this.result = "Invalid input. Please check your request.";
+            BankLog.outcome(BankLog.Event.ACCOUNT_DELETE, false, null);
+            return;
+        }
     }
 
     public User getUser() {
@@ -257,29 +361,17 @@ public class API {
      * specified.
      */
     long parseMoney(String str) {
-        long dollars = 0, cents;
-
+        // Preserve truncation after two decimals, but handle one decimal and overflow safely
+        if (str == null) return 0L;
+        if (str.matches("\\$?-?\\d+\\.-\\d+")) return Long.MIN_VALUE;
+        if (!str.matches("\\$?-?\\d+(\\.\\d*)?")) return 0L;
         try {
-            String[] parts = str.split("\\.");
-
-            /* Remove dollar sign if and only if it is at the beginning,
-             * otherwise, rely on exception handling. */
-            if(parts[0].charAt(0) == '$')
-                parts[0] = parts[0].substring(1);
-
-            dollars = Long.parseLong(parts[0]);
-            cents = Long.parseLong(parts[1].substring(0, 2));
-        } catch(Exception e) {
-            if(e instanceof IndexOutOfBoundsException) {
-                return 100*dollars;
-            } else {
-                return 0L;
-            }
+            String number = str.startsWith("$") ? str.substring(1) : str;
+            return new java.math.BigDecimal(number).movePointRight(2)
+                    .setScale(0, java.math.RoundingMode.DOWN).longValueExact();
+        } catch (ArithmeticException | NumberFormatException e) {
+            return 0L;
         }
-
-        if(cents < 0) return Long.MIN_VALUE;
-
-        return 100*dollars + cents;
     }
 
     private int validatePin(String pin) {
@@ -300,9 +392,9 @@ public class API {
     }
 
     AccountType validateAcctType(String type) {
-        if(type.equalsIgnoreCase("checking")) {
+        if("checking".equalsIgnoreCase(type)) {
             return AccountType.CHECKING;
-        } else if(type.equalsIgnoreCase("savings")) {
+        } else if("savings".equalsIgnoreCase(type)) {
             return AccountType.SAVINGS;
         } else {
             this.result = "Invalid account type.";
