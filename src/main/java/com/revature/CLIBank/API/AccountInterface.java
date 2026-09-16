@@ -1,4 +1,5 @@
 package com.revature.CLIBank.API;
+import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.Utility.Money;
 import com.revature.CLIBank.model.AccountInfo;
 import com.revature.CLIBank.BusinessLogic.BankTransactions;
@@ -7,7 +8,8 @@ import java.util.Scanner ;
 
 
 public class AccountInterface {
-
+    AccountRepo accountRepo ;
+    BankTransactions bankTransactions ;
     //Mo
     public void askDeposit(AccountInfo accountInfo){
         System.out.println("What amount would you like to deposit?");
@@ -66,7 +68,7 @@ public class AccountInterface {
                 System.out.println("Withdrawal failed.");
             }
             } catch(NumberFormatException ex){
-                System.out.println("Invalid input. Please enter a valid number." + ex.toString());
+                System.out.println("Invalid input. Please enter a valid number.");
             }
 
         }
@@ -84,7 +86,7 @@ public class AccountInterface {
             BigDecimal amountDecimal = new BigDecimal(amountStr);
 
             long amount = Money.toCents(amountStr);
-            BankTransactions bankTransactions = new BankTransactions();
+            //bankTransactions = new BankTransactions();
             long amountTransferred = bankTransactions.transfer(sendingAccount, receivingAccount, amount);
 
             if (amountTransferred > 0) {
@@ -99,13 +101,27 @@ public class AccountInterface {
                 System.out.println("Transfer failed.");
             }
         } catch (NumberFormatException ex) {
-            System.out.println("Invalid input. Please enter a valid number." + ex.toString());
+            System.out.println("Invalid input. Please enter a valid number.");
         }
 
     }
 
-
+    public AccountRepo getAccountRepo() {
+        return accountRepo;
     }
+
+    public void setAccountRepo(AccountRepo accountRepo) {
+        this.accountRepo = accountRepo;
+    }
+
+    public BankTransactions getBankTransactions() {
+        return bankTransactions;
+    }
+
+    public void setBankTransactions(BankTransactions bankTransactions) {
+        this.bankTransactions = bankTransactions;
+    }
+}
 
 
 
