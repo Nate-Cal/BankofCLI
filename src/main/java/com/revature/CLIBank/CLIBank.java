@@ -131,6 +131,7 @@ public class CLIBank {
         } else if (cmd.equalsIgnoreCase("withdraw")) {
             try {
                 api.withdraw(args.get(1), args.get(2));
+                System.out.println(api.getResult());
             } catch (Exception e) {
                 if (e instanceof IndexOutOfBoundsException) {
                     printError("Syntax error: too few arguments");

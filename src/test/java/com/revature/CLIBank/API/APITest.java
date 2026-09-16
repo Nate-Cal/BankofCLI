@@ -3,6 +3,8 @@ package com.revature.CLIBank.API;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 public class APITest {
 
     @Test
@@ -70,5 +72,55 @@ public class APITest {
         Assertions.assertEquals(intended, amt0);
         Assertions.assertEquals(intended, amt1);
         Assertions.assertEquals(amt0, amt1);
+    }
+
+    @Test
+    public void registerTestFail() {
+        API api = new API();
+
+        api.register("a", "a");
+        Assertions.assertEquals("""
+             Username must include 1 Uppercase, 1 Lowercase, and must be between 8 and 16 characters.
+             Password must include 1 Uppercase, 1 Lowercase, 1 number, 1 special character, and be 16-24 characters.
+             """, api.getResult());
+    }
+
+    @Test
+    public void registerTestPass() {
+        API api = new API();
+        api.register("Username", "Pa$$w0rdPa$$w0rd");
+        Assertions.assertEquals("User " + "Username" + " successfully registered.",  api.getResult());
+    }
+
+    @Test
+    public void usernameRepeat() {
+        API api = new API();
+        String username = "Abc123Abc123";
+
+        api.register(username, "Pa$$w0rdPa$$w0rd");
+        Assertions.assertEquals("User " + username + " successfully registered.", api.getResult());
+
+        api.register(username, "Abc123$%Abc123$%");
+        Assertions.assertEquals("Username taken. Choose a different username.", api.getResult());
+    }
+
+    @Test
+    public void transferNonUUID() {
+        API api = new API();
+
+        api.login("Username", "Pa$$w0rdPa$$w0rd");
+        api.transfer("foo", "bar", "100.00");
+        Assertions.assertEquals("One or both accounts are invalid bank account numbers.", api.getResult());
+    }
+
+    @Test
+    public void randomUUIDTransfer() {
+        API api = new API();
+        api.login("Username", "Pa$$w0rdPa$$w0rd");
+
+        String src = UUID.randomUUID().toString();
+        String dest = UUID.randomUUID().toString();
+        api.transfer(src, dest, "100.00");
+        Assertions.assertEquals("Source account does not exist.", api.getResult());
     }
 }
