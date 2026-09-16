@@ -16,7 +16,7 @@ public class AccountRepo {
         String query = """
             CREATE TABLE IF NOT EXISTS Owners (
                 userID TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
+                name TEXT NOT NULL UNIQUE,
                 age INTEGER NOT NULL,
                 passWord TEXT NOT NULL
             ); """;
@@ -279,6 +279,29 @@ public class AccountRepo {
                 return mapUser(rs);
             }
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /** 
+     * Method to find a user by its name
+     * Returns an User object if the user does exist in the database
+     * Return null if it does not exists
+     */
+    public User findUserByName(String name) {
+        String query = "SELECT * FROM Owners WHERE name = ?";
+
+        try (
+            Connection connection = ConnectionFactory.getAutoCommitConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+        ) {
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapUser(rs);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
