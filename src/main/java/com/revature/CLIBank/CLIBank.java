@@ -130,8 +130,10 @@ public class CLIBank {
         } else if (cmd.equalsIgnoreCase("transactions")) {
             if (args.size() == 1) {
                 api.getTransactions();
+                System.out.println(api.getResult());
             } else if (args.size() == 2) {
-                api.getTransactions(100);
+                api.getTransactions(Integer.parseInt(args.get(1)));
+                System.out.println(api.getResult());
             } else if (args.size() == 3) {
                 int stagedRows = Integer.parseInt(args.get(1));
                 if (stagedRows <= 1000) {
