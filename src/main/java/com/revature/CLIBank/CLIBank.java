@@ -32,7 +32,7 @@ public class CLIBank {
     create <PIN> <checking|savings>: create a new account
     delete <your account> <PIN>: delete an account
     deposit <your account> <amount>: Add money
-    withdraw <your account> <amount>: Remove money
+    withdraw <your account> <amount> <PIN>: Remove money
     transfer <your account> <recipient account number> <amount>: Transfer money
     exit/quit: End your session
     """;
@@ -49,23 +49,13 @@ public class CLIBank {
         Scanner sc = new Scanner(System.in);
         boolean registered; //Mo
 
-
         do {
-            //if(api.getUser() == null && api.getResult() != null)
-                //System.out.print(api.getResult());
-            // I removed this because the login error was showing up again when I
-            // selected N. interactive() already prints the login error, so register()
-            // was printing the same old message a second time.
-
             System.out.println("Register for a new account with the Bank of CLI.");
             System.out.print("Username: ");
             username = sc.nextLine();
             System.out.print("Password: ");
             password = sc.nextLine();
 
-            // api.register() was already creating an error message when the username
-            // or password was invalid, but the CLI wasn't printing it. I saved the
-            // return value so I can print the error before asking the user to try again.
             registered = api.register(username, password);
 
             if (!registered) {
@@ -73,7 +63,7 @@ public class CLIBank {
                 System.out.println();
             }
 
-        } while (!registered); //while(!api.register(username, password));
+        } while (!registered);
 
         System.out.println("Successfully registered. Please log in.");
     }
@@ -129,12 +119,13 @@ public class CLIBank {
                     printError("Syntax error: too few arguments.");
             }
         } else if (cmd.equalsIgnoreCase("withdraw")) {
-            try {
-                api.withdraw(args.get(1), args.get(2));
-            } catch (Exception e) {
-                if (e instanceof IndexOutOfBoundsException) {
-                    printError("Syntax error: too few arguments");
-                }
+            if(args.size() < 4) {
+                printError("Withdraw: not enough arguments");
+            } else if(args.size() > 4) {
+                printError("Withdraw: too many arguments.");
+            } else {
+                api.withdraw(args.get(1), args.get(2), args.get(3));
+                System.out.println(api.getResult());
             }
         } else if (cmd.equalsIgnoreCase("transactions")) {
             if (args.size() == 1) {

@@ -7,18 +7,21 @@ import com.revature.CLIBank.model.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 public class API {
 
     private User user;
     private String result;
     private final BankTransactions bankTransactions;
+    private final AccountRepo accountRepo;
 
     public API() {
         this.user = null;
         this.result = null;
         this.bankTransactions = new BankTransactions();
-        new AccountRepo().initSchema();
+        this.accountRepo = new AccountRepo();
+        accountRepo.initSchema();
     }
 
     /**
@@ -31,12 +34,18 @@ public class API {
      * @return boolean, the success of the registration
      */
     public boolean register(String username, String password) {
+        if(this.accountRepo.findUserByName(username) != null) {
+            this.result = "Username taken. Choose a different username.";
+            return false;
+        }
+
         boolean unameStat = AccountValidation.isUsernameValid(username);
         boolean pwStat = AccountValidation.isPasswordValid(password);
 
         if(unameStat && pwStat) {
             User tmpUser = new User(username, 0, password);
             AccountRepo.insertUser(tmpUser);
+            this.result = "User " + username + " successfully registered.";
         } else {
             this.result =
              """
@@ -66,20 +75,44 @@ public class API {
         if(uEmpty) this.result = "Please enter a username";
         if(uEmpty || pEmpty) return false;
 
-        User stagedUser = new User(username, password);
+        User stagedUser = this.accountRepo.findUserByNameAndPassword(username, password);
 
-        if(stagedUser.exists) {
-            this.user = stagedUser;
-            this.result = "Login successful.";
-        } else {
+        if(stagedUser == null) {
             this.result = "Login failed. Try again.";
+            return false;
         }
 
-        return stagedUser.exists;
+        this.user = stagedUser;
+        this.result = "Login successful.";
+        return true;
     }
 
+    /**
+     * Add money to an account that the signed-in user owns
+     *
+     * @author Nicholas DiGirolamo
+     * @param acct
+     * @param amount
+     */
     public void deposit(String acct, String amount) {
-        AccountInfo ai = new AccountInfo(UUID.fromString(acct));
+        AccountInfo ai = null;
+
+        try {
+            UUID.fromString(acct);
+        } catch (IllegalArgumentException e) {
+            this.result = "Not a valid bank account number.";
+            return;
+        }
+
+        for (AccountInfo a : this.user.getAccounts())
+            if (a.getAccountID().toString().equals(acct))
+                ai = a;
+
+        if(ai == null) {
+            this.result = "You do not own the destination account.";
+            return;
+        }
+
         long specBalance = parseMoney(amount);
 
         if(specBalance == 0 || this.bankTransactions.deposit(ai, specBalance) == 0) {
@@ -90,9 +123,44 @@ public class API {
         }
     }
 
-    public void withdraw(String acct, String amount) {
-        AccountInfo ai = new AccountInfo(UUID.fromString(acct));
+    /**
+     * Remove a specified amount from an account
+     *
+     * @author Nicholas DiGirolamo
+     * @param acct
+     * @param amount
+     */
+    public void withdraw(String acct, String amount, String pin) {
+        AccountInfo ai = null;
+
+        try {
+            UUID.fromString(acct);
+        } catch (IllegalArgumentException e) {
+            this.result = "Not a valid bank account number.";
+            return;
+        }
+
+        int corrPin = validatePin(pin);
+        if(corrPin == 0) {
+            this.result = "Invalid PIN.";
+            return;
+        }
+
+        for (AccountInfo a : this.user.getAccounts())
+            if (a.getAccountID().toString().equals(acct))
+                ai = a;
+
+        if(ai == null) {
+            this.result = "You do not own the source account.";
+            return;
+        }
+
         long specBalance = parseMoney(amount);
+
+        if(ai.getPin() != corrPin) {
+            this.result = "Incorrect PIN";
+            return;
+        }
 
         if(specBalance == 0 || this.bankTransactions.withdraw(ai, specBalance) == 0) {
             this.result = "No money was withdrawn. Check your prompt again.";
@@ -103,12 +171,50 @@ public class API {
     }
 
     public void transfer(String src, String dest, String amount) {
-        String[] parts = amount.split("..");
-        AccountInfo srcAcct = new AccountInfo(UUID.fromString(src));
-        AccountInfo destAcct = new AccountInfo(UUID.fromString(dest));
+        long money = parseMoney(amount);
 
-        this.bankTransactions.transfer(srcAcct, destAcct,
-                100*Long.parseLong(parts[0]) + Long.parseLong(parts[1]));
+        if(money == 0L) {
+            this.result = "Zero or improperly formatted amount.";
+            return;
+        }
+
+        UUID srcId, destId;
+        try {
+            srcId = UUID.fromString(src);
+            destId = UUID.fromString(dest);
+        } catch(IllegalArgumentException iae) {
+            this.result = "One or both accounts are invalid bank account numbers.";
+            return;
+        }
+
+        AccountInfo srcAcct = this.accountRepo.findAccountById(srcId);
+        AccountInfo destAcct = this.accountRepo.findAccountById(destId);
+
+        if(srcAcct == null) {
+            this.result = "Source account does not exist.";
+            return;
+        }
+
+        if(srcAcct.getUserID() != this.user.getUserID()) {
+            this.result = "You are not the owner of the source account.";
+            return;
+        }
+
+        if(destAcct == null) {
+            this.result = "Destination account does not exist.";
+            return;
+        }
+
+        if(srcAcct.equals(destAcct)) {
+            this.result = "Cannot transfer money to the same account.";
+            return;
+        }
+
+        if(this.bankTransactions.transfer(srcAcct, destAcct, money) == 0) {
+            this.result = "No money was transferred.";
+        } else {
+            this.result = "Transfer successful.";
+        }
     }
 
     /**
@@ -132,7 +238,7 @@ public class API {
                 List<Transaction> listTransactions;
 
                 if(rows > 0) listTransactions = ac.getTransactions(rows);
-                else listTransactions = ac.getTransactions();
+                else listTransactions = ac.getTransactions(); /* Always negative */
 
                 try {
                     for (Transaction t : listTransactions) {
@@ -220,18 +326,35 @@ public class API {
         if(correctPin == -1) return;
 
         AccountInfo ai = new AccountInfo(this.user.getUserID(), correctPin, at);
+        ai.setBalance(0);
+        ai.setUserID(this.user.getUserID());
+        ai.setAccountType(at);
+        ai.setPin(correctPin);
+        ai.setAccountID(ai.getAccountID());
         AccountRepo.insertAccount(ai);
         this.result = "Account successfully created.\nAccount number: " + ai.getAccountID();
     }
 
     public void deleteAcct(String uuid, String pin) {
-        UUID id = UUID.fromString(uuid);
         int corrPin = validatePin(pin);
 
-        for(AccountInfo ai : user.getAccounts()) {
-            if(ai.getPin() == corrPin && ai.getAccountID() == id) {
+        if(corrPin == -1) {
+            this.result = "Invalid PIN";
+            return;
+        }
+
+        try {
+            UUID.fromString(uuid);
+        } catch(IllegalArgumentException iae) {
+            this.result = "Target account number invalid.";
+            return;
+        }
+
+        for(AccountInfo ai : this.user.getAccounts()) {
+            if(ai.getAccountID().toString().equals(uuid)) {
                 AccountRepo.deleteAccount(ai);
                 this.result = "Successfully deleted account " + uuid;
+                return;
             }
         }
         this.result = "Did not delete account " + uuid + ". Try again.";
