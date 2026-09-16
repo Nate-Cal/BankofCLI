@@ -95,7 +95,7 @@ public class APITest {
     @Test
     public void usernameRepeat() {
         API api = new API();
-        String username = "Abc123Abc123";
+        String username = "A1aeouaoeu";
 
         api.register(username, "Pa$$w0rdPa$$w0rd");
         Assertions.assertEquals("User " + username + " successfully registered.", api.getResult());

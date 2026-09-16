@@ -32,7 +32,7 @@ public class API {
      * @return boolean, the success of the registration
      */
     public boolean register(String username, String password) {
-        if(new AccountRepo().findUserByNameAndPassword(username, password) != null) {
+        if(new AccountRepo().findUserByName(username) != null) {
             this.result = "Username taken. Choose a different username.";
             return false;
         }
