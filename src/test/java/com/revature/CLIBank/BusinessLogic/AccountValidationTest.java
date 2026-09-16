@@ -1,22 +1,67 @@
 package com.revature.CLIBank.BusinessLogic;
 
+import com.revature.CLIBank.Repository.AccountRepo;
+import com.revature.CLIBank.model.AccountInfo;
+import com.revature.CLIBank.model.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
 
 public class AccountValidationTest {
     public AccountValidation accountValidation;
 
-//    @Test
-//    public void UUIDPositive(){
-//
-//    }
+    /*
+    Nate, create an account, insert it with insertAccount.java, then look that same id back up with
+    findAccountById(account.getAccountID()) (this method is in AccountRepo.java) and assert if they are equal
+    that proves it saved. For the duplicate check, take that existing UUID and pass it into isUUIDValid, it should
+    return false if findAccountById already finds something
+     */
 
     @Test
-    public void userIDPositive() {
-        String validUsername ="UsernameValid";
-        boolean userIDPositive = AccountValidation.isUsernameValid(validUsername);
+    public void UUIDPositive(){
+        User user = new User(UUID.randomUUID(), "TestUser", 30, "password");
+        AccountRepo.insertUser(user);
 
-        Assertions.assertTrue(userIDPositive, "Expected UserID to be valid");
+        AccountInfo accountInfo = new AccountInfo(user.getUserID(), 1234);
+        AccountRepo.insertAccount(accountInfo);
+
+        AccountRepo accountRepo = new AccountRepo();
+        AccountInfo createdAccount = accountRepo.findAccountById(accountInfo.getAccountID());
+
+        Assertions.assertNotNull(createdAccount, "Created Account found in Repo");
+        Assertions.assertEquals(accountInfo.getAccountID(), createdAccount.getAccountID());
+    }
+
+    @Test
+    public void UUIDNegative() {
+        User user = new User(UUID.randomUUID(), "TestUser2", 30, "password");
+        AccountRepo.insertUser(user);
+
+        AccountInfo accountInfo = new AccountInfo(user.getUserID(), 4321);
+        AccountRepo.insertAccount(accountInfo);
+
+        AccountRepo accountRepo = new AccountRepo();
+        AccountInfo existingAccount = accountRepo.findAccountById(user.getUserID());
+
+        Assertions.assertNull(existingAccount, "UserID should return null");
+
+    }
+
+    @Test
+    public void usernamePositive() {
+        String validUsername ="UsernameValid";
+        boolean usernamePositive = AccountValidation.isUsernameValid(validUsername);
+
+        Assertions.assertTrue(usernamePositive, "Expected Username to be valid");
+    }
+
+    @Test
+    public void usernameNegative() {
+        String invalidUsername = "usernameinvalid";
+        boolean usernameNegative = AccountValidation.isUsernameValid(invalidUsername);
+
+        Assertions.assertFalse(usernameNegative, "Expected Username to be invalid");
     }
 
     /*
@@ -44,5 +89,13 @@ public class AccountValidationTest {
         boolean passwordPositive = AccountValidation.isPasswordValid(validPassword);
 
         Assertions.assertTrue(passwordPositive, "Expected Password to be valid");
+    }
+
+    @Test
+    public void passwordNegative() {
+        String invalidPassword = "validpassword123";
+        boolean passwordNegative = AccountValidation.isPasswordValid(invalidPassword);
+
+        Assertions.assertFalse(passwordNegative, "Expected Password to be invalid");
     }
 }

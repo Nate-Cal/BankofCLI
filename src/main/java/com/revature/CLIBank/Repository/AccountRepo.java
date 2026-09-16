@@ -485,25 +485,26 @@ public class AccountRepo {
 
     /**
      * Method to delete an account in the database
-     * It will automatically delete all the transactions involving this account
+     * It will automatically delete the transactions that only involves this account
      */
     public static void deleteAccount(AccountInfo account) {
-        String deleteTransaction = """
+        String deleteOwnTransactions = """
             DELETE FROM Transactions
-            WHERE sourceAccountId = ? OR destinationAccountId = ?
+            WHERE sourceAccountId = ?
+            AND destinationAccountId IS NULL
             """;
         String deleteAccount = "DELETE FROM Accounts WHERE accountID = ?";
 
         try (
             Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement tx = connection.prepareStatement(deleteTransaction);
+            Statement pragma = connection.createStatement();
+            PreparedStatement tx = connection.prepareStatement(deleteOwnTransactions);
             PreparedStatement acct = connection.prepareStatement(deleteAccount);
         ) {
+            pragma.execute("PRAGMA foreign_keys = OFF");
             String accountId = account.getAccountID().toString();
             tx.setString(1, accountId);
-            tx.setString(2, accountId);
             tx.executeUpdate();
-
             acct.setString(1, accountId);
             acct.executeUpdate();
         } catch (SQLException e) {
@@ -512,29 +513,32 @@ public class AccountRepo {
     }
 
     /**
-     * Method to delete multiple accounts associated with an userID
-     * It will take the UUID of an user
-     * It will delete all the transactions associated with the user
+     * Deletes every account owned by the user
+     * Own deposits, withdrawals, and transfers between this user's accounts are removed
+     * Transfers with another user's account are kept for that other account.
      */
     public static void deleteAllAccounts(UUID userId) {
-        String deleteTransaction = """
+        String deleteOwnTransactions = """
             DELETE FROM Transactions
             WHERE sourceAccountId IN (SELECT accountID FROM Accounts WHERE userID = ?)
+            AND (
+            destinationAccountId IS NULL
             OR destinationAccountId IN (SELECT accountID FROM Accounts WHERE userID = ?)
+            )
             """;
         String deleteAccounts = "DELETE FROM Accounts WHERE userID = ?";
 
         try (
             Connection connection = ConnectionFactory.getAutoCommitConnect();
-            PreparedStatement tx = connection.prepareStatement(deleteTransaction);
+            Statement pragma = connection.createStatement();
+            PreparedStatement tx = connection.prepareStatement(deleteOwnTransactions);
             PreparedStatement accts = connection.prepareStatement(deleteAccounts);
         ) {
-            String id = userId.toString();
-            tx.setString(1, id);
-            tx.setString(2, id);
+            pragma.execute("PRAGMA foreign_keys = OFF");
+            tx.setString(1, userId.toString());
+            tx.setString(2, userId.toString());
             tx.executeUpdate();
-
-            accts.setString(1, id);
+            accts.setString(1, userId.toString());
             accts.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
