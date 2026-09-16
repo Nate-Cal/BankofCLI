@@ -1,6 +1,10 @@
 package com.revature.CLIBank.API;
 
+import com.revature.CLIBank.BusinessLogic.BankTransactions;
+import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.model.AccountInfo;
+import com.revature.CLIBank.model.AccountType;
+import com.revature.CLIBank.model.User;
 import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.util.UUID;
@@ -83,17 +87,28 @@ class AccountInterfaceTest {
 
     @Test
     void askTransferPositive() {
-        AccountInfo sendingAccount = new AccountInfo(UUID.randomUUID(), 1234);
+
+        AccountRepo accountRepo = new AccountRepo();
+        User user = new User("Owner67", 45, "Pass1234!");
+        accountRepo.insertUser(user);
+
+        AccountInfo sendingAccount = new AccountInfo(UUID.randomUUID(), user.getUserID(), 1001, AccountType.CHECKING, 10000L, false);
         sendingAccount.setBalance(7500L);
         sendingAccount.setFrozen(false);
 
-        AccountInfo receivingAccount = new AccountInfo(UUID.randomUUID(), 4321);
+        AccountInfo receivingAccount = new AccountInfo(UUID.randomUUID(), user.getUserID(), 1002, AccountType.SAVINGS, 0L, false);
+
         receivingAccount.setBalance(1500L);
         receivingAccount.setFrozen(false);
+        AccountRepo.insertAccount(sendingAccount);
+        AccountRepo.insertAccount(receivingAccount);
 
         System.setIn(new ByteArrayInputStream("30.00\n".getBytes()));
 
         AccountInterface accountInterface = new AccountInterface();
+        BankTransactions bankTransactions = new BankTransactions() ;
+        bankTransactions.setAccountRepo(accountRepo);
+        accountInterface.setBankTransactions(bankTransactions);
         accountInterface.askTransfer(sendingAccount, receivingAccount);
 
         assertEquals(4500L, sendingAccount.getBalance());

@@ -87,7 +87,9 @@ public class User {
         return password;
     }
 
-    public void setPassWord(String passWord) { this.password = password;
+    public void setPassWord(String passWord) {
+        this.password = passWord;
+
     }
 
     /**

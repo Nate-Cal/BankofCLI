@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.UUID;
 
+import com.revature.CLIBank.Repository.AccountRepo;
+import com.revature.CLIBank.model.AccountType;
+import com.revature.CLIBank.model.User;
 import org.junit.jupiter.api.Test;
 
 import com.revature.CLIBank.model.AccountInfo;
@@ -64,15 +67,24 @@ class BankTransactionsTest {
 
     @Test
     void transfer() {
-        AccountInfo sender = new AccountInfo(UUID.randomUUID(), 1234);
+        AccountRepo accountRepo = new AccountRepo();
+        User user = new User("Owner67", 45, "Pass1234!");
+        accountRepo.insertUser(user);
+
+        AccountInfo sender = new AccountInfo(UUID.randomUUID(), user.getUserID(), 1001, AccountType.CHECKING, 10000L, false);
         sender.setBalance(100L);
         sender.setFrozen(false);
 
-        AccountInfo receiver = new AccountInfo(UUID.randomUUID(), 4321);
+        AccountInfo receiver = new AccountInfo(UUID.randomUUID(), user.getUserID(), 1002, AccountType.SAVINGS, 0L, false);
+
         receiver.setBalance(50L);
         receiver.setFrozen(false);
+        AccountRepo.insertAccount(sender);
+        AccountRepo.insertAccount(receiver);
+
 
         BankTransactions bankTransactions = new BankTransactions();
+        bankTransactions.setAccountRepo(accountRepo);
         long result = bankTransactions.transfer(sender, receiver, 25L);
 
         assertEquals(25L, result);

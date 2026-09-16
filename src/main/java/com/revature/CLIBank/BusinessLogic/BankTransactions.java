@@ -4,6 +4,8 @@ import com.revature.CLIBank.model.AccountInfo;
 
 
 public class BankTransactions {
+
+    AccountRepo accountRepo ;
     //Mo
     public long deposit(AccountInfo accountInfo, long amount) {
         BankActions bankActions = new BankActions();
@@ -45,7 +47,8 @@ public class BankTransactions {
             return 0;
         }
 
-        AccountRepo accountRepo = new AccountRepo();
+        if (accountRepo == null) //done for unit test
+            accountRepo = new AccountRepo();
         if(accountRepo.transferMoney(sendingAccount, receivingAccount, amount)){
             BankLog.outcome(BankLog.Event.TRANSFER, true, null);
             return amount;
@@ -64,5 +67,13 @@ public class BankTransactions {
         return amount; */
 
 
+    }
+
+    public AccountRepo getAccountRepo() {
+        return accountRepo;
+    }
+
+    public void setAccountRepo(AccountRepo accountRepo) {
+        this.accountRepo = accountRepo;
     }
 }
