@@ -1,5 +1,9 @@
 package com.revature.CLIBank.BusinessLogic;
 
+import com.revature.CLIBank.Repository.AccountRepo;
+import com.revature.CLIBank.model.AccountInfo;
+import java.util.UUID;
+
 public class AccountValidation {
 
     /*
@@ -16,7 +20,9 @@ public class AccountValidation {
      */
 
     public static boolean isUUIDValid(String accountID) {
-        return true;
+        UUID uuid = UUID.fromString(accountID);
+        AccountRepo accountRepo = new AccountRepo();
+        return accountRepo.findAccountById(uuid) == null;
     }
 
     /*
