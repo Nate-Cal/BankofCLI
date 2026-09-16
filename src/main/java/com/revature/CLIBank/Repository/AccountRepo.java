@@ -20,7 +20,7 @@ public class AccountRepo {
         String query = """
             CREATE TABLE IF NOT EXISTS Owners (
                 userID TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
+                name TEXT NOT NULL UNIQUE,
                 age INTEGER NOT NULL,
                 passWord TEXT NOT NULL
             ); """;
