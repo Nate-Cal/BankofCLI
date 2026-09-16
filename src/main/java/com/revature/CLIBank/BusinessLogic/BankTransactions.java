@@ -1,6 +1,8 @@
 package com.revature.CLIBank.BusinessLogic;
 import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.model.AccountInfo;
+import com.revature.CLIBank.model.Transaction;
+import com.revature.CLIBank.model.TransactionType;
 
 
 public class BankTransactions {
@@ -9,33 +11,52 @@ public class BankTransactions {
     //Mo
     public long deposit(AccountInfo accountInfo, long amount) {
         BankActions bankActions = new BankActions();
-        if (!bankActions.checkDeposit(accountInfo, amount)) {
-            BankLog.outcome(BankLog.Event.DEPOSIT_IN_MEMORY, false, null);
+        if (accountInfo == null || !bankActions.checkDeposit(accountInfo, amount)) {
+            BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
             return 0;
         }
         long balance, newBalance;
         balance = accountInfo.getBalance();
-        newBalance = balance + amount;
+        // Overflow must be rejected before anything is saved.
+        try { newBalance = Math.addExact(balance, amount); }
+        catch (ArithmeticException e) {
+            BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
+            return 0;
+        }
+        // Keep Mo's checks; persist both records before changing the account object.
+        if (accountRepo == null) accountRepo = new AccountRepo();
+        if (!accountRepo.saveBalanceAndHistory(accountInfo, newBalance,
+                new Transaction(accountInfo.getAccountID(), TransactionType.DEPOSIT, amount))) {
+            BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
+            return 0;
+        }
         accountInfo.setBalance(newBalance);
 
         //return the amount deposited
-        BankLog.outcome(BankLog.Event.DEPOSIT_IN_MEMORY, true, null);
+        BankLog.outcome(BankLog.Event.DEPOSIT, true, null);
         return amount;
     }
 
     //Mo
     public long withdraw(AccountInfo accountInfo, long amount) {
         BankActions bankActions = new BankActions();
-        if(!bankActions.checkWithdraw(accountInfo, amount)){
-            BankLog.outcome(BankLog.Event.WITHDRAWAL_IN_MEMORY, false, null);
+        if(accountInfo == null || !bankActions.checkWithdraw(accountInfo, amount)){
+            BankLog.outcome(BankLog.Event.WITHDRAWAL, false, null);
             return 0;
         }
         long balance, newBalance;
         balance = accountInfo.getBalance();
         newBalance = balance - amount;
+        // Keep Mo's checks; persist both records before changing the account object.
+        if (accountRepo == null) accountRepo = new AccountRepo();
+        if (!accountRepo.saveBalanceAndHistory(accountInfo, newBalance,
+                new Transaction(accountInfo.getAccountID(), TransactionType.WITHDRAWAL, amount))) {
+            BankLog.outcome(BankLog.Event.WITHDRAWAL, false, null);
+            return 0;
+        }
         accountInfo.setBalance(newBalance);
 
-        BankLog.outcome(BankLog.Event.WITHDRAWAL_IN_MEMORY, true, null);
+        BankLog.outcome(BankLog.Event.WITHDRAWAL, true, null);
         return amount;
     }
 

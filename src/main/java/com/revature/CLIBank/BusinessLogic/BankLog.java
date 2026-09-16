@@ -10,7 +10,8 @@ public final class BankLog {
 
     public enum Event {
         DEPOSIT_IN_MEMORY, WITHDRAWAL_IN_MEMORY, TRANSFER,
-        TRANSACTION_HISTORY, LOGIN, DATABASE
+        TRANSACTION_HISTORY, LOGIN, DATABASE,
+        DEPOSIT, WITHDRAWAL // These events now mean the database save completed.
     }
 
     // Call after the result is known; A cause always means failure

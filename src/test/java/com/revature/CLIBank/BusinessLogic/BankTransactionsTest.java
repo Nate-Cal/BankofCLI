@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import com.revature.CLIBank.model.AccountInfo;
 
 class BankTransactionsTest {
+    @org.junit.jupiter.api.BeforeEach void schema() { new AccountRepo().initSchema(); }
 
     @Test
     void deposit() {
@@ -19,6 +20,7 @@ class BankTransactionsTest {
         account.setBalance(100L);
         account.setFrozen(false);
 
+        com.revature.CLIBank.TestAccounts.save(account);
         BankTransactions bankTransactions = new BankTransactions();
         long result = bankTransactions.deposit(account, 50L);
 
@@ -45,6 +47,7 @@ class BankTransactionsTest {
         account.setBalance(100L);
         account.setFrozen(false);
 
+        com.revature.CLIBank.TestAccounts.save(account);
         BankTransactions bankTransactions = new BankTransactions();
         long result = bankTransactions.withdraw(account, 50L);
 
