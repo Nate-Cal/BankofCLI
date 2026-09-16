@@ -119,8 +119,11 @@ public class AccountRepo {
             ps.setInt(3, user.getAge());
             ps.setString(4, user.getPassword());
             // Describe the database result; the API owns the overall user action.
-            if (ps.executeUpdate() == 1) logger.info("USER_SAVE succeeded");
-            else logger.error("USER_SAVE failed: no row saved");
+            if (ps.executeUpdate() == 1) {
+                logger.info("USER_SAVE succeeded");
+                return;
+            }
+            logger.error("USER_SAVE failed: no row saved");
 
         } catch (SQLException e) {
             logger.error("DATABASE operation failed", e);
@@ -297,7 +300,31 @@ public class AccountRepo {
         return null;
     }
 
-    /**
+    /** 
+     * Finds a user by name
+     * Returns null if it does not find an user
+     * Returns an User object if it does find it
+     */
+    public User findUserByName(String name) {
+        String query = "SELECT * FROM Owners WHERE name = ?";
+
+        try (
+            Connection connection = ConnectionFactory.getAutoCommitConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+        ) {
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapUser(rs);
+            }
+
+        } catch (SQLException e) {
+            logger.error("DATABASE operation failed", e);
+        }
+        return null;
+    }
+    
+    /** 
      * Method to find an account by ID
      * Return null if the record does not exists
      * Return the AccountInfo object if it finds it
@@ -486,14 +513,15 @@ public class AccountRepo {
      * It will return a boolean between whether the transaction was succesfully made or not
      */
     public boolean transferMoney(AccountInfo source, AccountInfo dest, long amount) {
-        String addSQL = "UPDATE Accounts SET balance = balance + ? WHERE accountID = ?";
-        String withdrawSQL = "UPDATE Accounts SET balance = balance - ? WHERE accountID = ?";
+        String addSQL = "UPDATE Accounts SET balance = balance + ? WHERE accountID = ? AND frozen = 0";
+        String withdrawSQL = "UPDATE Accounts SET balance = balance - ? WHERE accountID = ? AND frozen = 0 AND balance >= ?";
 
         try (Connection connection = ConnectionFactory.getManualCommitConnection()) {
             try {
                 try(PreparedStatement ps = connection.prepareStatement(withdrawSQL)) {
                     ps.setLong(1, amount);
                     ps.setString(2, source.getAccountID().toString());
+                    ps.setLong(3, amount);
                     if (ps.executeUpdate() != 1) {
                         throw new SQLException("Withdrawing money from account failed");
                     }
@@ -550,11 +578,13 @@ public class AccountRepo {
                 PreparedStatement acct = connection.prepareStatement(deleteAccount);
         ) {
             pragma.execute("PRAGMA foreign_keys = OFF");
+            connection.setAutoCommit(false);
             String accountId = account.getAccountID().toString();
             tx.setString(1, accountId);
             tx.executeUpdate();
             acct.setString(1, accountId);
             acct.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
             logger.error("DATABASE operation failed", e);
         }
@@ -583,11 +613,13 @@ public class AccountRepo {
                 PreparedStatement accts = connection.prepareStatement(deleteAccounts);
         ) {
             pragma.execute("PRAGMA foreign_keys = OFF");
+            connection.setAutoCommit(false);
             tx.setString(1, userId.toString());
             tx.setString(2, userId.toString());
             tx.executeUpdate();
             accts.setString(1, userId.toString());
             accts.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
             logger.error("DATABASE operation failed", e);
         }
