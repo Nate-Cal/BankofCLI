@@ -14,12 +14,14 @@ public class API {
     private User user;
     private String result;
     private final BankTransactions bankTransactions;
+    private final AccountRepo accountRepo;
 
     public API() {
         this.user = null;
         this.result = null;
         this.bankTransactions = new BankTransactions();
-        new AccountRepo().initSchema();
+        this.accountRepo = new AccountRepo();
+        accountRepo.initSchema();
     }
 
     /**
@@ -32,7 +34,7 @@ public class API {
      * @return boolean, the success of the registration
      */
     public boolean register(String username, String password) {
-        if(new AccountRepo().findUserByName(username) != null) {
+        if(this.accountRepo.findUserByName(username) != null) {
             this.result = "Username taken. Choose a different username.";
             return false;
         }
@@ -73,18 +75,25 @@ public class API {
         if(uEmpty) this.result = "Please enter a username";
         if(uEmpty || pEmpty) return false;
 
-        User stagedUser = new User(username, password);
+        User stagedUser = this.accountRepo.findUserByNameAndPassword(username, password);
 
-        if(stagedUser.exists) {
-            this.user = stagedUser;
-            this.result = "Login successful.";
-        } else {
+        if(stagedUser == null) {
             this.result = "Login failed. Try again.";
+            return false;
         }
 
-        return stagedUser.exists;
+        this.user = stagedUser;
+        this.result = "Login successful.";
+        return true;
     }
 
+    /**
+     * Add money to an account that the signed-in user owns
+     *
+     * @author Nicholas DiGirolamo
+     * @param acct
+     * @param amount
+     */
     public void deposit(String acct, String amount) {
         AccountInfo ai = null;
 
@@ -114,13 +123,26 @@ public class API {
         }
     }
 
-    public void withdraw(String acct, String amount) {
+    /**
+     * Remove a specified amount from an account
+     *
+     * @author Nicholas DiGirolamo
+     * @param acct
+     * @param amount
+     */
+    public void withdraw(String acct, String amount, String pin) {
         AccountInfo ai = null;
 
         try {
             UUID.fromString(acct);
         } catch (IllegalArgumentException e) {
             this.result = "Not a valid bank account number.";
+            return;
+        }
+
+        int corrPin = validatePin(pin);
+        if(corrPin == 0) {
+            this.result = "Invalid PIN.";
             return;
         }
 
@@ -134,6 +156,11 @@ public class API {
         }
 
         long specBalance = parseMoney(amount);
+
+        if(ai.getPin() != corrPin) {
+            this.result = "Incorrect PIN";
+            return;
+        }
 
         if(specBalance == 0 || this.bankTransactions.withdraw(ai, specBalance) == 0) {
             this.result = "No money was withdrawn. Check your prompt again.";
@@ -160,8 +187,8 @@ public class API {
             return;
         }
 
-        AccountInfo srcAcct = new AccountRepo().findAccountById(srcId);
-        AccountInfo destAcct = new AccountRepo().findAccountById(destId);
+        AccountInfo srcAcct = this.accountRepo.findAccountById(srcId);
+        AccountInfo destAcct = this.accountRepo.findAccountById(destId);
 
         if(srcAcct == null) {
             this.result = "Source account does not exist.";

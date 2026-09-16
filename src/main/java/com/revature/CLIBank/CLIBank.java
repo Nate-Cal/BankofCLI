@@ -32,7 +32,7 @@ public class CLIBank {
     create <PIN> <checking|savings>: create a new account
     delete <your account> <PIN>: delete an account
     deposit <your account> <amount>: Add money
-    withdraw <your account> <amount>: Remove money
+    withdraw <your account> <amount> <PIN>: Remove money
     transfer <your account> <recipient account number> <amount>: Transfer money
     exit/quit: End your session
     """;
@@ -119,13 +119,13 @@ public class CLIBank {
                     printError("Syntax error: too few arguments.");
             }
         } else if (cmd.equalsIgnoreCase("withdraw")) {
-            try {
-                api.withdraw(args.get(1), args.get(2));
+            if(args.size() < 4) {
+                printError("Withdraw: not enough arguments");
+            } else if(args.size() > 4) {
+                printError("Withdraw: too many arguments.");
+            } else {
+                api.withdraw(args.get(1), args.get(2), args.get(3));
                 System.out.println(api.getResult());
-            } catch (Exception e) {
-                if (e instanceof IndexOutOfBoundsException) {
-                    printError("Syntax error: too few arguments");
-                }
             }
         } else if (cmd.equalsIgnoreCase("transactions")) {
             if (args.size() == 1) {
