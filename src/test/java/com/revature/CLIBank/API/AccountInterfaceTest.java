@@ -12,6 +12,9 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AccountInterfaceTest {
+    private final java.io.InputStream originalInput = System.in;
+    @org.junit.jupiter.api.AfterEach void restoreInput() { System.setIn(originalInput); }
+    @org.junit.jupiter.api.BeforeEach void schema() { new AccountRepo().initSchema(); }
 
 
     @Test
@@ -20,6 +23,7 @@ class AccountInterfaceTest {
         account.setBalance(1000L);
         account.setFrozen(false);
 
+        com.revature.CLIBank.TestAccounts.save(account);
         System.setIn(new ByteArrayInputStream("25.00\n".getBytes()));
 
         AccountInterface accountInterface = new AccountInterface();
@@ -62,6 +66,7 @@ class AccountInterfaceTest {
         account.setBalance(3500L);
         account.setFrozen(false);
 
+        com.revature.CLIBank.TestAccounts.save(account);
         System.setIn(new ByteArrayInputStream("25.00\n".getBytes()));
 
         AccountInterface accountInterface = new AccountInterface();
@@ -128,6 +133,10 @@ class AccountInterfaceTest {
         System.setIn(new ByteArrayInputStream("50.00\n".getBytes()));
 
         AccountInterface accountInterface = new AccountInterface();
+
+        // Supply the transaction helper, as the positive transfer test already does
+        accountInterface.setBankTransactions(new BankTransactions());
+
         accountInterface.askTransfer(sendingAccount, receivingAccount);
 
         assertEquals(2000L, sendingAccount.getBalance());

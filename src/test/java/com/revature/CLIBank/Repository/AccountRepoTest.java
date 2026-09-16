@@ -22,6 +22,9 @@ public class AccountRepoTest {
 
     @BeforeEach
     void setUp() {
+        // Prevent table cleanup from touching the application's real database
+        if (!"jdbc:sqlite:./data/test-bank.db".equals(System.getenv("DATABASE-PATH")))
+            throw new IllegalStateException("Run tests through Maven with the test database.");
         repo = new AccountRepo();
         repo.initSchema();
         wipeTables();
@@ -29,8 +32,8 @@ public class AccountRepoTest {
 
     private void wipeTables() {
         try (
-            Connection connection = ConnectionFactory.getAutoCommitConnect();
-            Statement statement = connection.createStatement()
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                Statement statement = connection.createStatement()
         ) {
             statement.execute("DELETE FROM Transactions");
             statement.execute("DELETE FROM Accounts");
@@ -39,8 +42,8 @@ public class AccountRepoTest {
             e.printStackTrace();
         }
     }
-    
-    @Test 
+
+    @Test
     void insertUserThenFindById() {
         User user = new User("TestUser", 21, "Pass123!");
         AccountRepo.insertUser(user);
@@ -53,12 +56,12 @@ public class AccountRepoTest {
         assertEquals("Pass123!", found.getPassword());
     }
 
-    @Test 
+    @Test
     void findUserByIdReturnsNullWhenMissing() {
         assertNull(repo.findUserById(UUID.randomUUID()));
     }
 
-    @Test 
+    @Test
     void findUserByNameAndPassword() {
         User user = new User("LoginUser", 30, "Sectret!");
         AccountRepo.insertUser(user);
@@ -69,7 +72,7 @@ public class AccountRepoTest {
         assertNull(repo.findUserByNameAndPassword("LoginUser", "Wrong"));
     }
 
-    @Test 
+    @Test
     void insertAccountThenFindById() {
         User user = new User("Owner", 30, "pass123!");
         AccountRepo.insertUser(user);
@@ -86,7 +89,7 @@ public class AccountRepoTest {
         assertFalse(found.isFrozen());
     }
 
-    @Test 
+    @Test
     void findAccountsByUserIdReturnsThatUsersAccounts() {
         User user = new User("Owner2", 29, "Pass123!");
         AccountRepo.insertUser(user);
@@ -100,12 +103,12 @@ public class AccountRepoTest {
         assertEquals(2, accounts.size());
     }
 
-    @Test 
+    @Test
     void findAccountByIdReturnsNullWhenMissing() {
         assertNull(repo.findAccountById(UUID.randomUUID()));
     }
 
-    @Test 
+    @Test
     void updateUserChangesDatabase() {
         User user = new User("Before", 24, "Old");
         AccountRepo.insertUser(user);
@@ -117,7 +120,7 @@ public class AccountRepoTest {
         assertEquals("After", found.getName());
     }
 
-    @Test 
+    @Test
     void updateAccountChangesBlanaceAndFrozen() {
         User user = new User("Owner3", 40, "Pass123!");
         AccountRepo.insertUser(user);
@@ -135,7 +138,7 @@ public class AccountRepoTest {
 
     }
 
-    @Test 
+    @Test
     void insertTransactionThenFindByAccountId() {
         User user = new User("Owner4", 22, "Pass123!");
         AccountRepo.insertUser(user);
@@ -154,7 +157,7 @@ public class AccountRepoTest {
         assertNull(found.get(0).getDestinationAccountId());
     }
 
-    @Test 
+    @Test
     void findTransactionsByAccountIdRespectsLimit() {
         User user = new User("Owner5", 22, "Pass123!");
         AccountRepo.insertUser(user);
@@ -170,7 +173,7 @@ public class AccountRepoTest {
         assertEquals(2, found.size());
     }
 
-    @Test 
+    @Test
     void transferMoneyMovesBalanceAndRecordsTransaction() {
         User user = new User("Owner6", 35, "Pass123!");
         AccountRepo.insertUser(user);
@@ -193,7 +196,7 @@ public class AccountRepoTest {
         assertEquals(dest.getAccountID(), ts.get(0).getDestinationAccountId());
     }
 
-    @Test 
+    @Test
     void deleteAccountRemovesAccountAndTransactions() {
         User user = new User("Owner7", 28, "Pass123!");
         AccountRepo.insertUser(user);
@@ -208,7 +211,7 @@ public class AccountRepoTest {
         assertEquals(0, repo.findTransactionsByAccountId(account.getAccountID()).size());
     }
 
-    @Test 
+    @Test
     void deleteAllAccountsRemovesThatUsersAccounts() {
         User user = new User("Owner8", 33, "Pass123!");
         AccountRepo.insertUser(user);

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 public class AccountValidationTest {
+    @org.junit.jupiter.api.BeforeEach void schema() { new AccountRepo().initSchema(); }
     public AccountValidation accountValidation;
 
     /*
