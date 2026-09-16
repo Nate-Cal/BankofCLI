@@ -7,7 +7,6 @@ import com.revature.CLIBank.model.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 public class API {
 
@@ -173,29 +172,34 @@ public class API {
     public void transfer(String src, String dest, String amount) {
         long money = parseMoney(amount);
 
-        if(money == 0L) {
-            this.result = "Zero or improperly formatted amount.";
+        if(money <= 0L) {
+            this.result = "Zero, negative, or improperly formatted amount.";
             return;
         }
 
-        UUID srcId, destId;
         try {
-            srcId = UUID.fromString(src);
-            destId = UUID.fromString(dest);
+            UUID.fromString(src);
+            UUID.fromString(dest);
         } catch(IllegalArgumentException iae) {
             this.result = "One or both accounts are invalid bank account numbers.";
             return;
         }
 
-        AccountInfo srcAcct = this.accountRepo.findAccountById(srcId);
-        AccountInfo destAcct = this.accountRepo.findAccountById(destId);
+        AccountInfo srcAcct = null, destAcct = null;
+        for (AccountInfo a : this.user.getAccounts()) {
+            if (a.getAccountID().toString().equals(src)) {
+                srcAcct = a;
+            } else if (a.getAccountID().toString().equals(dest)) {
+                destAcct = a;
+            }
+        }
 
         if(srcAcct == null) {
             this.result = "Source account does not exist.";
             return;
         }
 
-        if(srcAcct.getUserID() != this.user.getUserID()) {
+        if(!srcAcct.getUserID().toString().equals(this.user.getUserID().toString())) {
             this.result = "You are not the owner of the source account.";
             return;
         }
@@ -311,8 +315,11 @@ public class API {
             sb.append(ac.getAccountID());
             sb.append(" ");
             sb.append(ac.getAccountType());
-            sb.append(" ");
-            sb.append(ac.getBalance());
+            sb.append(" $");
+            long bal = ac.getBalance();
+            sb.append(bal / 100);
+            sb.append(".");
+            sb.append(bal % 100);
             sb.append("\n");
         }
         this.result = sb.toString();
