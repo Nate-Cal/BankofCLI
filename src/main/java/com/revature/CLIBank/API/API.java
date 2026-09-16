@@ -309,13 +309,25 @@ public class API {
     }
 
     public void deleteAcct(String uuid, String pin) {
-        UUID id = UUID.fromString(uuid);
         int corrPin = validatePin(pin);
 
-        for(AccountInfo ai : user.getAccounts()) {
-            if(ai.getPin() == corrPin && ai.getAccountID() == id) {
+        if(corrPin == -1) {
+            this.result = "Invalid PIN";
+            return;
+        }
+
+        try {
+            UUID.fromString(uuid);
+        } catch(IllegalArgumentException iae) {
+            this.result = "Target account number invalid.";
+            return;
+        }
+
+        for(AccountInfo ai : this.user.getAccounts()) {
+            if(ai.getAccountID().toString().equals(uuid)) {
                 AccountRepo.deleteAccount(ai);
                 this.result = "Successfully deleted account " + uuid;
+                return;
             }
         }
         this.result = "Did not delete account " + uuid + ". Try again.";
