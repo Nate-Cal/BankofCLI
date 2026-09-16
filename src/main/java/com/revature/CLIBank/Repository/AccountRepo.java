@@ -324,6 +324,32 @@ public class AccountRepo {
     }
 
     /**
+     * Looks up a username so registration can reject duplicate usernames.
+     * Returns the matching user, or null if not found or the query fails.
+     */
+    public User findUserByName(String name) {
+        String query = "SELECT * FROM Owners WHERE name = ?";
+
+        try (
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query)
+        ) {
+            ps.setString(1, name);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapUser(rs);
+                }
+            }
+        } catch (SQLException e) {
+            // Record database failures using the existing logger.
+            logger.error("DATABASE username lookup failed", e);
+        }
+
+        return null;
+    }
+
+    /**
      * Method to find every account owned by a user
      * Return an empty list if the user has no accounts
      * Return a list of AccountInfo objects if it finds them
