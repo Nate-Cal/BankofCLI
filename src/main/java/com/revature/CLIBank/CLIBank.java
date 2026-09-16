@@ -47,17 +47,33 @@ public class CLIBank {
     protected static void register() {
         String username, password;
         Scanner sc = new Scanner(System.in);
+        boolean registered; //Mo
+
 
         do {
-            if(api.getUser() == null && api.getResult() != null)
-                System.out.print(api.getResult());
+            //if(api.getUser() == null && api.getResult() != null)
+                //System.out.print(api.getResult());
+            // I removed this because the login error was showing up again when I
+            // selected N. interactive() already prints the login error, so register()
+            // was printing the same old message a second time.
 
             System.out.println("Register for a new account with the Bank of CLI.");
             System.out.print("Username: ");
             username = sc.nextLine();
             System.out.print("Password: ");
             password = sc.nextLine();
-        } while(!api.register(username, password));
+
+            // api.register() was already creating an error message when the username
+            // or password was invalid, but the CLI wasn't printing it. I saved the
+            // return value so I can print the error before asking the user to try again.
+            registered = api.register(username, password);
+
+            if (!registered) {
+                System.out.println(api.getResult());
+                System.out.println();
+            }
+
+        } while (!registered); //while(!api.register(username, password));
 
         System.out.println("Successfully registered. Please log in.");
     }
