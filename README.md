@@ -1,3 +1,20 @@
+# Bank of CLI
+This is a submission for the first assignment of the Revature Fall 2026 Teaneck cohort. 
+It is not legitimate banking application, and the authors nor their employer do not
+claim any liability or warranty for this program, expressed or implied.
+
+The Bank of CLI ("Manjuban") is a command-line program meant to teach
+standard CRUD tooling in addition to project workflows using Git.
+This program happens to be written against standard Java tooling and uses
+SQLite for persistence.
+
+## Contributors
+- Nathen Calderon
+- Nicholas DiGirolamo
+- Benedict Martinez
+- Mo Saha
+- Juan Vasquez
+
 ## Password Encryption Setup
 
 If you are running the project for the first time, you will need to set up the `CLIBank` run configuration in IntelliJ.
