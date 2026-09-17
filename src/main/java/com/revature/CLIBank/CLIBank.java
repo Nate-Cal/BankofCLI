@@ -5,37 +5,41 @@ import com.revature.CLIBank.API.*;
 import java.util.*;
 
 public class CLIBank {
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(CLIBank.class);
     private static final String usage =
-    """
-    usage CLIBank [-h] | [batch <command> -u <username> -p <password>]
-    """;
+            """
+            usage CLIBank [-h] | [batch <command> -u <username> -p <password>]
+            """;
 
     private static final String prompt = "CLIBank> ";
 
     private static final String logo =
-    """
-    ____              _             __    _____ _      _____\s
-   |  _ \\            | |           / _|  / ____| |    |_   _|
-   | |_) | __ _ _ __ | | __   ___ | |_  | |    | |      | | \s
-   |  _ < / _` | '_ \\| |/ /  / _ \\|  _| | |    | |      | | \s
-   | |_) | (_| | | | |   <  | (_) | |   | |____| |____ _| |_\s
-   |____/ \\__,_|_| |_|_|\\_\\  \\___/|_|    \\_____|______|_____|
-   """;
+            """
+            ____              _             __    _____ _      _____\s
+           |  _ \\            | |           / _|  / ____| |    |_   _|
+           | |_) | __ _ _ __ | | __   ___ | |_  | |    | |      | | \s
+           |  _ < / _` | '_ \\| |/ /  / _ \\|  _| | |    | |      | | \s
+           | |_) | (_| | | | |   <  | (_) | |   | |____| |____ _| |_\s
+           |____/ \\__,_|_| |_|_|\\_\\  \\___/|_|    \\_____|______|_____|
+           """;
 
     protected static final String helpTxt =
-    """
-    Bank of CLI shell commands:
-    
-    help/?: Show this help
-    accounts: List your accounts
-    transactions <your account> [optional: n]: List recent transactions
-    create <PIN> <checking|savings>: create a new account
-    delete <your account> <PIN>: delete an account
-    deposit <your account> <amount>: Add money
-    withdraw <your account> <amount> <PIN>: Remove money
-    transfer <your account> <recipient account number> <amount>: Transfer money
-    exit/quit: End your session
-    """;
+            """
+            Bank of CLI shell commands:
+            
+            help/?: Show this help
+            accounts: List your accounts
+            transactions: List your transaction history
+            transactions <count>: Limit the displayed history
+            transactions <your account> [count]: List account history (count: 0-1000)
+            create <PIN> <checking|savings>: create a new account
+            delete <your account> <PIN>: delete an account
+            deposit <your account> <amount>: Add money
+            withdraw <your account> <amount> <PIN>: Remove money
+            transfer <your account> <recipient account number> <amount>: Transfer money
+            exit/quit: End your session
+            """;
 
     private static API api;
 
@@ -128,22 +132,28 @@ public class CLIBank {
                 System.out.println(api.getResult());
             }
         } else if (cmd.equalsIgnoreCase("transactions")) {
-            if (args.size() == 1) {
-                api.getTransactions();
-                System.out.println(api.getResult());
-            } else if (args.size() == 2) {
-                api.getTransactions(Integer.parseInt(args.get(1)));
-                System.out.println(api.getResult());
-            } else if (args.size() == 3) {
-                int stagedRows = Integer.parseInt(args.get(1));
-                if (stagedRows <= 1000) {
-                    int rows = Integer.parseInt(args.get(2));
-                    if (rows < 0) rows = 0;
-                    api.getAcctTransactions(args.get(1), rows);
-                    System.out.print(api.getResult());
+            // Only counts are numbers; account UUIDs remain text.
+            try {
+                if (args.size() == 1) {
+                    api.getTransactions();
+                } else if (args.size() == 2) {
+                    String value = args.get(1);
+                    if (value.matches("[+-]?[0-9]+")) {
+                        api.getTransactions(historyCount(value));
+                    } else {
+                        UUID.fromString(value);
+                        api.getAcctTransactions(value, -1);
+                    }
+                } else if (args.size() == 3) {
+                    UUID.fromString(args.get(1));
+                    api.getAcctTransactions(args.get(1), historyCount(args.get(2)));
+                } else {
+                    throw new IllegalArgumentException("Wrong argument count");
                 }
-            } else {
-                printError("Syntax error");
+                System.out.print(api.getResult());
+            } catch (IllegalArgumentException e) {
+                logger.error("TRANSACTION_HISTORY rejected: invalid command arguments");
+                printError("Use transactions, transactions <count>, or transactions <account-ID> [count]. Count must be 0-1000.");
             }
         } else if(cmd.equalsIgnoreCase("transfer")) {
             if(args.size() < 4) {
@@ -159,6 +169,13 @@ public class CLIBank {
         } else {
             printError("Unrecognized command");
         }
+    }
+
+    /** Validate the history limit without confusing it with an account ID. */
+    private static int historyCount(String value) {
+        int count = Integer.parseInt(value);
+        if (count < 0 || count > 1000) throw new IllegalArgumentException("Invalid history count");
+        return count;
     }
 
     protected static void interactive() {

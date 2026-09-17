@@ -71,7 +71,8 @@ class BankTransactionsTest {
     @Test
     void transfer() {
         AccountRepo accountRepo = new AccountRepo();
-        User user = new User("Owner67", 45, "Pass1234!");
+        // Avoid colliding with the other transfer test's saved username.
+        User user = new User("Owner" + UUID.randomUUID(), 45, "Pass1234!");
         accountRepo.insertUser(user);
 
         AccountInfo sender = new AccountInfo(UUID.randomUUID(), user.getUserID(), 1001, AccountType.CHECKING, 10000L, false);

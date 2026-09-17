@@ -411,9 +411,9 @@ class PersistenceIntegrationTest {
 
         api.getAcctTransactions(account.getAccountID().toString(), 2);
 
-        // Match the current API's history format, which uses raw cents.
-        assertTrue(api.getResult().contains("5000"));
-        assertTrue(api.getResult().contains("1000"));
+        // Verify the approved history display includes types and formatted dollars.
+        assertTrue(api.getResult().contains("DEPOSIT $50.00"));
+        assertTrue(api.getResult().contains("WITHDRAWAL $10.00"));
         assertEquals(2, api.getResult().lines().count());
     }
 

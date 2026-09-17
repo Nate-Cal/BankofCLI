@@ -4,11 +4,18 @@ import com.revature.CLIBank.BusinessLogic.*;
 import com.revature.CLIBank.Repository.AccountRepo;
 import com.revature.CLIBank.model.*;
 
-import java.util.Arrays;
+import com.revature.CLIBank.Utility.Money;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.UUID;
 
 public class API {
+
+    // Log early API rejections without recording passwords, PINs, or raw input.
+    private static final Logger logger = LoggerFactory.getLogger(API.class);
 
     private User user;
     private String result;
@@ -35,6 +42,7 @@ public class API {
     public boolean register(String username, String password) {
         if(this.accountRepo.findUserByName(username) != null) {
             this.result = "Username taken. Choose a different username.";
+            logger.error("REGISTRATION rejected: username already exists");
             return false;
         }
 
@@ -47,12 +55,13 @@ public class API {
             this.result = "User " + username + " successfully registered.";
         } else {
             this.result =
-             """
-             Username must include 1 Uppercase, 1 Lowercase, and must be between 8 and 16 characters.
-             Password must include 1 Uppercase, 1 Lowercase, 1 number, 1 special character, and be 16-24 characters.
-             """;
+                    """
+                    Username must include 1 Uppercase, 1 Lowercase, and must be between 8 and 16 characters.
+                    Password must include 1 Uppercase, 1 Lowercase, 1 number, 1 special character, and be 16-24 characters.
+                    """;
         }
 
+        if (!unameStat || !pwStat) logger.error("REGISTRATION rejected: invalid credentials format");
         return unameStat && pwStat;
     }
 
@@ -72,17 +81,22 @@ public class API {
 
         if(pEmpty) this.result = "Please enter a password";
         if(uEmpty) this.result = "Please enter a username";
-        if(uEmpty || pEmpty) return false;
+        if(uEmpty || pEmpty) {
+            logger.error("LOGIN rejected: missing credentials");
+            return false;
+        }
 
         User stagedUser = this.accountRepo.findUserByNameAndPassword(username, password);
 
         if(stagedUser == null) {
             this.result = "Login failed. Try again.";
+            logger.error("LOGIN failed");
             return false;
         }
 
         this.user = stagedUser;
         this.result = "Login successful.";
+        logger.info("LOGIN succeeded");
         return true;
     }
 
@@ -100,6 +114,7 @@ public class API {
             UUID.fromString(acct);
         } catch (IllegalArgumentException e) {
             this.result = "Not a valid bank account number.";
+            logger.error("TRANSACTION rejected: invalid account ID");
             return;
         }
 
@@ -109,15 +124,18 @@ public class API {
 
         if(ai == null) {
             this.result = "You do not own the destination account.";
+            logger.error("DEPOSIT rejected: account ownership check failed");
             return;
         }
 
         long specBalance = parseMoney(amount);
 
+        // Nonzero requests are logged by BankTransactions; zero stops here.
+        if (specBalance == 0) logger.error("DEPOSIT rejected: zero or invalid amount");
         if(specBalance == 0 || this.bankTransactions.deposit(ai, specBalance) == 0) {
             this.result = "No money was deposited. Check your prompt again.";
         } else {
-            this.result = "$" + specBalance / 100 + "." + specBalance % 100 + " successfully deposited into "
+            this.result = "$" + Money.fromCents(specBalance) + " successfully deposited into "
                     + ai.getAccountID().toString() + ".";
         }
     }
@@ -136,12 +154,15 @@ public class API {
             UUID.fromString(acct);
         } catch (IllegalArgumentException e) {
             this.result = "Not a valid bank account number.";
+            logger.error("TRANSACTION rejected: invalid account ID");
             return;
         }
 
         int corrPin = validatePin(pin);
-        if(corrPin == 0) {
+        // validatePin returns -1 for invalid input; retain the existing zero-PIN rejection.
+        if(corrPin <= 0) {
             this.result = "Invalid PIN.";
+            logger.error("PIN validation rejected");
             return;
         }
 
@@ -151,6 +172,7 @@ public class API {
 
         if(ai == null) {
             this.result = "You do not own the source account.";
+            logger.error("WITHDRAWAL rejected: account ownership check failed");
             return;
         }
 
@@ -158,13 +180,16 @@ public class API {
 
         if(ai.getPin() != corrPin) {
             this.result = "Incorrect PIN";
+            logger.error("WITHDRAWAL rejected: incorrect PIN");
             return;
         }
 
+        // Nonzero requests are logged by BankTransactions; zero stops here.
+        if (specBalance == 0) logger.error("WITHDRAW rejected: zero or invalid amount");
         if(specBalance == 0 || this.bankTransactions.withdraw(ai, specBalance) == 0) {
             this.result = "No money was withdrawn. Check your prompt again.";
         } else {
-            this.result = "$" + specBalance / 100 + "." + specBalance % 100 + " successfully withdrawn from "
+            this.result = "$" + Money.fromCents(specBalance) + " successfully withdrawn from "
                     + ai.getAccountID().toString() + ".";
         }
     }
@@ -174,6 +199,7 @@ public class API {
 
         if(money <= 0L) {
             this.result = "Zero, negative, or improperly formatted amount.";
+            logger.error("TRANSFER rejected: invalid amount");
             return;
         }
 
@@ -182,6 +208,7 @@ public class API {
             UUID.fromString(dest);
         } catch(IllegalArgumentException iae) {
             this.result = "One or both accounts are invalid bank account numbers.";
+            logger.error("TRANSFER rejected: invalid account ID");
             return;
         }
 
@@ -196,21 +223,25 @@ public class API {
 
         if(srcAcct == null) {
             this.result = "Source account does not exist.";
+            logger.error("TRANSFER rejected: source account unavailable");
             return;
         }
 
         if(!srcAcct.getUserID().toString().equals(this.user.getUserID().toString())) {
             this.result = "You are not the owner of the source account.";
+            logger.error("TRANSFER rejected: account ownership check failed");
             return;
         }
 
         if(destAcct == null) {
             this.result = "Destination account does not exist.";
+            logger.error("TRANSFER rejected: destination account unavailable");
             return;
         }
 
         if(srcAcct.equals(destAcct)) {
             this.result = "Cannot transfer money to the same account.";
+            logger.error("TRANSFER rejected: same account");
             return;
         }
 
@@ -246,16 +277,22 @@ public class API {
 
                 try {
                     for (Transaction t : listTransactions) {
+                        // Display the stored type and dollars; single-account events have no destination.
+                        sb.append(t.getType());
+                        sb.append(" $");
+                        sb.append(Money.fromCents(t.getAmount()));
+                        sb.append(" ");
                         sb.append(t.getSourceAccountId());
-                        sb.append(" ");
-                        sb.append(t.getDestinationAccountId());
-                        sb.append(" ");
-                        sb.append(t.getAmount());
+                        if (t.getDestinationAccountId() != null) {
+                            sb.append(" -> ");
+                            sb.append(t.getDestinationAccountId());
+                        }
                         sb.append(" ");
                         sb.append(t.getTimestamp());
                         sb.append("\n");
                     }
                 } catch (NullPointerException npe) {
+                    logger.error("TRANSACTION_HISTORY failed: incomplete transaction data");
                     sb.append("Warning: null transaction.\n");
                 }
             }
@@ -287,13 +324,11 @@ public class API {
     }
 
     public void getTransactions(int rows) {
+        if (rows <= 0) { this.result = ""; return; }
         this.getTransactions();
-        String[] subrange = Arrays.copyOf(this.result.split("\n"), rows);
+        // Limit existing lines instead of padding the result with null entries.
         StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < rows; i++) {
-            sb.append(subrange[i]);
-            sb.append("\n");
-        }
+        this.result.lines().limit(rows).forEach(line -> sb.append(line).append("\n"));
         this.result = sb.toString();
     }
 
@@ -317,9 +352,7 @@ public class API {
             sb.append(ac.getAccountType());
             sb.append(" $");
             long bal = ac.getBalance();
-            sb.append(bal / 100);
-            sb.append(".");
-            sb.append(bal % 100);
+            sb.append(Money.fromCents(bal));
             sb.append("\n");
         }
         this.result = sb.toString();
@@ -347,6 +380,7 @@ public class API {
 
         if(corrPin == -1) {
             this.result = "Invalid PIN";
+            logger.error("ACCOUNT_DELETE rejected: invalid PIN");
             return;
         }
 
@@ -354,6 +388,7 @@ public class API {
             UUID.fromString(uuid);
         } catch(IllegalArgumentException iae) {
             this.result = "Target account number invalid.";
+            logger.error("ACCOUNT_DELETE rejected: invalid account ID");
             return;
         }
 
@@ -387,29 +422,19 @@ public class API {
      * specified.
      */
     long parseMoney(String str) {
-        long dollars = 0, cents;
-
+        // Preserve the existing invalid-input return values and truncation policy.
+        // Decimal arithmetic fixes 12.5 and -0.50 without floating-point rounding.
+        if (str == null) return 0L;
+        String text = str.trim();
+        if (text.startsWith("$")) text = text.substring(1);
+        if (text.matches("[+-]?[0-9]+\\.-[0-9]+")) return Long.MIN_VALUE;
+        if (!text.matches("[+-]?[0-9]+(?:\\.[0-9]*)?")) return 0L;
         try {
-            String[] parts = str.split("\\.");
-
-            /* Remove dollar sign if and only if it is at the beginning,
-             * otherwise, rely on exception handling. */
-            if(parts[0].charAt(0) == '$')
-                parts[0] = parts[0].substring(1);
-
-            dollars = Long.parseLong(parts[0]);
-            cents = Long.parseLong(parts[1].substring(0, 2));
-        } catch(Exception e) {
-            if(e instanceof IndexOutOfBoundsException) {
-                return 100*dollars;
-            } else {
-                return 0L;
-            }
+            return new BigDecimal(text).setScale(2, RoundingMode.DOWN)
+                    .movePointRight(2).longValueExact();
+        } catch (NumberFormatException | ArithmeticException e) {
+            return 0L;
         }
-
-        if(cents < 0) return Long.MIN_VALUE;
-
-        return 100*dollars + cents;
     }
 
     private int validatePin(String pin) {
@@ -419,11 +444,13 @@ public class API {
             correctPin = Integer.parseInt(pin);
         } catch(NumberFormatException nfe) {
             this.result = "Invalid PIN.";
+            logger.error("PIN validation rejected");
             return -1;
         }
 
         if(correctPin < 0 || correctPin >= 10_000) {
             this.result = "Invalid PIN.";
+            logger.error("PIN validation rejected");
             return -1;
         }
         return correctPin;
@@ -436,6 +463,7 @@ public class API {
             return AccountType.SAVINGS;
         } else {
             this.result = "Invalid account type.";
+            logger.error("ACCOUNT_CREATE rejected: invalid account type");
             return null;
         }
     }
