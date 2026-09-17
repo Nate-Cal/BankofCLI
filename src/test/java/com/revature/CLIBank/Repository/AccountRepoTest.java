@@ -1,6 +1,7 @@
 package com.revature.CLIBank.Repository;
 
 import com.revature.CLIBank.Utility.ConnectionFactory;
+import com.revature.CLIBank.Utility.PasswordEncryption;
 import com.revature.CLIBank.model.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -53,7 +54,8 @@ public class AccountRepoTest {
         assertEquals(user.getUserID(), found.getUserID());
         assertEquals("TestUser", found.getName());
         assertEquals(21, found.getAge());
-        assertEquals("Pass123!", found.getPassword());
+        assertEquals("Pass123!", PasswordEncryption.decrypt(found.getPassword()));
+        //must set environment variable for this test to pass
     }
 
     @Test
