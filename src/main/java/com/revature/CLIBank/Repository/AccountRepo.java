@@ -1,6 +1,7 @@
 package com.revature.CLIBank.Repository;
 
 import com.revature.CLIBank.Utility.ConnectionFactory;
+import com.revature.CLIBank.Utility.PasswordEncryption;
 import com.revature.CLIBank.model.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -277,20 +278,28 @@ public class AccountRepo {
      * Returns null if no matching row exists
      */
     public User findUserByNameAndPassword(String name, String passWord) {
-        String query = "SELECT * FROM Owners WHERE name = ? AND passWord = ?";
+        //String query = "SELECT * FROM Owners WHERE name = ? AND passWord = ?";
+        String query = "SELECT * FROM Owners WHERE name = ?"; //Mo
 
         try (
                 Connection connection = ConnectionFactory.getAutoCommitConnect();
                 PreparedStatement ps = connection.prepareStatement(query);
         ) {
             ps.setString(1, name);
-            ps.setString(2, passWord);
+            //ps.setString(2, passWord);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 User found = mapUser(rs);
                 // Do not log the supplied username or password.
-                logger.info("CREDENTIAL_CHECK matched");
-                return found;
+
+                String decryptedPassword = PasswordEncryption.decrypt(found.getPassword()); //Mo
+
+                if (decryptedPassword.equals(passWord)) { //Mo
+                    logger.info("CREDENTIAL_CHECK matched");
+                    return found;
+                    //logger.info("CREDENTIAL_CHECK matched");
+                    //return found;
+                }
             }
             logger.error("CREDENTIAL_CHECK rejected");
 
