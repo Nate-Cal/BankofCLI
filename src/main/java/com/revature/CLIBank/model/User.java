@@ -1,7 +1,8 @@
 package com.revature.CLIBank.model;
 
 import com.revature.CLIBank.Repository.AccountRepo;
-import com.revature.CLIBank.Utility.PasswordEncryption;
+//import com.revature.CLIBank.Utility.PasswordEncryption;
+import com.revature.CLIBank.Utility.PasswordHashing;
 import java.util.UUID;
 import java.util.List;
 import java.util.Collections;
@@ -25,7 +26,8 @@ public class User {
         this.name = username;
         this.age = age;
         //this.password = password;
-        this.password = PasswordEncryption.encrypt(password); //Mo
+        //this.password = PasswordEncryption.encrypt(password); //Mo
+        this.password = PasswordHashing.hashPassword(password); //Mo
         this.exists = false;
     }
 
@@ -55,7 +57,8 @@ public class User {
         } else {
             this.name = username;
             //this.password = password;
-            this.password = PasswordEncryption.encrypt(password); //Mo
+            //this.password = PasswordEncryption.encrypt(password); //Mo
+            this.password = PasswordHashing.hashPassword(password);
             this.exists = false;
         }
     }
