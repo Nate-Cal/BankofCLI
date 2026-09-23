@@ -1,7 +1,8 @@
 package com.revature.CLIBank.Repository;
 
 import com.revature.CLIBank.Utility.ConnectionFactory;
-import com.revature.CLIBank.Utility.PasswordEncryption;
+//import com.revature.CLIBank.Utility.PasswordEncryption;
+import com.revature.CLIBank.Utility.PasswordHashing;
 import com.revature.CLIBank.model.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -292,9 +293,11 @@ public class AccountRepo {
                 User found = mapUser(rs);
                 // Do not log the supplied username or password.
 
-                String decryptedPassword = PasswordEncryption.decrypt(found.getPassword()); //Mo
+                //String decryptedPassword = PasswordEncryption.decrypt(found.getPassword()); //Mo
 
-                if (decryptedPassword.equals(passWord)) { //Mo
+
+                //if (decryptedPassword.equals(passWord)) { //Mo
+                if(PasswordHashing.checkPassword(passWord, found.getPassword())) {
                     logger.info("CREDENTIAL_CHECK matched");
                     return found;
                     //logger.info("CREDENTIAL_CHECK matched");
