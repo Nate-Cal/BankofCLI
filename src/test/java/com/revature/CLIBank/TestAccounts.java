@@ -10,7 +10,9 @@ public final class TestAccounts {
             throw new IllegalStateException("Run tests through Maven with the test database.");
         AccountRepo repo = new AccountRepo();
         repo.initSchema();
-        User owner = new User(account.getUserID(), UUID.randomUUID().toString(), 21, "fixture");
+        //User owner = new User(account.getUserID(), UUID.randomUUID().toString(), 21, "fixture");
+        User owner = new User(UUID.randomUUID().toString(), 21, "fixture");
+        owner.setUserID(account.getUserID()); //Mo
         if (repo.findUserById(owner.getUserID()) == null) AccountRepo.insertUser(owner);
         AccountRepo.insertAccount(account);
     }
