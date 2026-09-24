@@ -113,7 +113,7 @@ public class APITest {
         API api = new API();
         String uname = randomUname();
         String pass = randomPass();
-        api.register(uname, pass);
+        Assertions.assertTrue(api.register(uname, pass));
         Assertions.assertEquals("User " + uname + " successfully registered.",  api.getResult());
     }
 
@@ -132,8 +132,11 @@ public class APITest {
     @Test
     public void transferNonUUID() {
         API api = new API();
+        String uname = randomUname();
+        String pw = randomPass();
 
-        api.login("Username", "Pa$$w0rdPa$$w0rd");
+        Assertions.assertTrue(api.register(uname, pw));
+        Assertions.assertTrue(api.login(uname, pw));
         api.transfer("foo", "bar", "100.00");
         Assertions.assertEquals("One or both accounts are invalid bank account numbers.", api.getResult());
     }
@@ -141,7 +144,11 @@ public class APITest {
     @Test
     public void randomUUIDTransfer() {
         API api = new API();
-        api.login("Username", "Pa$$w0rdPa$$w0rd");
+        String uname = randomUname();
+        String pw = randomPass();
+
+        Assertions.assertTrue(api.register(uname, pw));
+        Assertions.assertTrue(api.login(uname, pw));
 
         String src = UUID.randomUUID().toString();
         String dest = UUID.randomUUID().toString();
