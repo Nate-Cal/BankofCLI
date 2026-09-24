@@ -45,7 +45,6 @@ public class APITest {
     public void login_fail_goodcreds() {
         API api = new API();
 
-        api.login("Username", "Pa$$w0rdPa$$w0rd");
         Assertions.assertFalse(api.login(randomUname(), randomPass()));
     }
 
