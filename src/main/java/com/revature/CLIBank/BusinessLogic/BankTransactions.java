@@ -8,7 +8,7 @@ import com.revature.CLIBank.model.TransactionType;
 public class BankTransactions {
 
     AccountRepo accountRepo ;
-    //Mo
+
     public long deposit(AccountInfo accountInfo, long amount) {
         BankActions bankActions = new BankActions();
         if (accountInfo == null || !bankActions.checkDeposit(accountInfo, amount)) {
@@ -23,7 +23,6 @@ public class BankTransactions {
             BankLog.outcome(BankLog.Event.DEPOSIT, false, null);
             return 0;
         }
-        // Keep Mo's checks; persist both records before changing the account object.
         if (accountRepo == null) accountRepo = new AccountRepo();
         if (!accountRepo.saveBalanceAndHistory(accountInfo, newBalance,
                 new Transaction(accountInfo.getAccountID(), TransactionType.DEPOSIT, amount))) {
@@ -37,7 +36,7 @@ public class BankTransactions {
         return amount;
     }
 
-    //Mo
+
     public long withdraw(AccountInfo accountInfo, long amount) {
         BankActions bankActions = new BankActions();
         if(accountInfo == null || !bankActions.checkWithdraw(accountInfo, amount)){
@@ -47,7 +46,6 @@ public class BankTransactions {
         long balance, newBalance;
         balance = accountInfo.getBalance();
         newBalance = balance - amount;
-        // Keep Mo's checks; persist both records before changing the account object.
         if (accountRepo == null) accountRepo = new AccountRepo();
         if (!accountRepo.saveBalanceAndHistory(accountInfo, newBalance,
                 new Transaction(accountInfo.getAccountID(), TransactionType.WITHDRAWAL, amount))) {
@@ -60,7 +58,6 @@ public class BankTransactions {
         return amount;
     }
 
-    //Mo
     public synchronized long transfer(AccountInfo sendingAccount, AccountInfo receivingAccount, long amount) {
         BankActions bankActions = new BankActions();
         if (!bankActions.checkTransfer(sendingAccount, receivingAccount, amount)) {
@@ -77,15 +74,6 @@ public class BankTransactions {
         BankLog.outcome(BankLog.Event.TRANSFER, false, null);
         return 0;
 
-       /* long balanceOne = sendingAccount.getBalance();
-        long balanceTwo = receivingAccount.getBalance();
-
-        sendingAccount.setBalance(balanceOne - amount);
-        receivingAccount.setBalance(balanceTwo - amount);
-
-        // if no error, conn.commit(); will go here
-
-        return amount; */
 
 
     }
