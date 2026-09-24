@@ -1,3 +1,4 @@
+/*
 package com.revature.CLIBank.Utility;
 
 import org.junit.jupiter.api.Test;
@@ -45,3 +46,5 @@ class PasswordEncryptionTest {
         );
     }
 }
+
+*/

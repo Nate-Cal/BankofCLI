@@ -95,6 +95,7 @@ class BankTransactionsTest {
         assertEquals(75L, receiver.getBalance());
     }
 
+
     @Test
     void transferNegative() {
         AccountInfo sender = new AccountInfo(UUID.randomUUID(), 1234);
