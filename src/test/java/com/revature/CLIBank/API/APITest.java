@@ -17,7 +17,7 @@ public class APITest {
     }
 
     private String randomPass() {
-        StringBuilder pw = new StringBuilder("Aa@");
+        StringBuilder pw = new StringBuilder("Aa@1");
         for(int i = 0; i < 13; i++) {
             pw.append(charset.charAt((int) (charset.length() * Math.random())));
         }
