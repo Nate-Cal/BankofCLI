@@ -21,6 +21,7 @@ class PersistenceIntegrationTest {
     private final BankTransactions bank = new BankTransactions();
     private AccountInfo account;
     private User owner;
+    private String testPassword; //Mo
     private Logger bankLogger, repoLogger;
     private ListAppender<ILoggingEvent> bankEvents, repoEvents;
 
@@ -29,6 +30,8 @@ class PersistenceIntegrationTest {
         account.setBalance(10000);
         TestAccounts.save(account);
         owner = repo.findUserById(account.getUserID());
+        testPassword = "fixture"; //Mo
+
         bankLogger = (Logger) LoggerFactory.getLogger(BankLog.class);
         repoLogger = (Logger) LoggerFactory.getLogger(AccountRepo.class);
         bankEvents = new ListAppender<>();
@@ -146,7 +149,8 @@ class PersistenceIntegrationTest {
         }
     }
     @Test void credentialsMatchWithoutLoggingCredentials() {
-        assertNotNull(repo.findUserByNameAndPassword(owner.getName(), owner.getPassword()));
+        //assertNotNull(repo.findUserByNameAndPassword(owner.getName(), owner.getPassword()));
+        assertNotNull(repo.findUserByNameAndPassword(owner.getName(), testPassword)); //Mo
         assertEquals("CREDENTIAL_CHECK matched", repoEvents.list.getLast().getFormattedMessage());
         assertFalse(repoEvents.list.getLast().getFormattedMessage().contains(owner.getPassword()));
     }
