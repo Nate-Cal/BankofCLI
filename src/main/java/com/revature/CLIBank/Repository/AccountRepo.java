@@ -593,6 +593,21 @@ public class AccountRepo {
         }
     }
 
+    public User findUserByName(String name) {
+        String query = "SELECT * FROM Owners WHERE name = ?";
 
-
+        try (
+                Connection connection = ConnectionFactory.getAutoCommitConnect();
+                PreparedStatement ps = connection.prepareStatement(query);
+        ) {
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapUser(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

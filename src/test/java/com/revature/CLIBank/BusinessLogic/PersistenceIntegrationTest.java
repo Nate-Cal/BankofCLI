@@ -176,7 +176,7 @@ class PersistenceIntegrationTest {
         API api = new API();
         assertTrue(api.login(owner.getName(), owner.getPassword()));
         api.deposit(account.getAccountID().toString(), "50.00");
-        api.withdraw(account.getAccountID().toString(), "10.00");
+        api.withdraw(account.getAccountID().toString(), "10.00", "1000");
         assertEquals(14000, new AccountInfo(account.getAccountID()).getBalance());
         api.getAcctTransactions(account.getAccountID().toString(), 2);
         // Assert the original API's actual raw-cent format, without demanding new formatting.

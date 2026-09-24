@@ -41,7 +41,9 @@ public class CLIBank {
 
     protected static void printError(String str) {
         System.err.println(str);
-        System.err.println();
+        System.err.flush();
+        System.out.println();
+        System.out.flush();
     }
 
     protected static void register() {
@@ -59,8 +61,7 @@ public class CLIBank {
             registered = api.register(username, password);
 
             if (!registered) {
-                System.out.println(api.getResult());
-                System.out.println();
+                System.out.println(api.getResult() + "\n");
             }
 
         } while (!registered);
@@ -81,39 +82,38 @@ public class CLIBank {
         return api.login(username, password);
     }
 
-    protected static void exec(List<String> args) {
+    protected static boolean exec(List<String> args) {
         String cmd = args.getFirst();
 
-        if (cmd.equalsIgnoreCase("exit") || cmd.equalsIgnoreCase("quit")) {
+        if(cmd.isEmpty()) {
+            return false;
+        } else if (cmd.equalsIgnoreCase("exit") || cmd.equalsIgnoreCase("quit")) {
             System.out.println("Goodbye!");
             System.exit(0); /* Normal, planned exit. */
         } else if(cmd.equalsIgnoreCase("create")) {
             if(args.size() < 3) {
                 printError("Create: not enough arguments");
-                return;
             } else if (args.size() > 3) {
                 printError("Create: too many arguments");
-                return;
+            } else {
+                api.creatAcct(args.get(1), args.get(2));
+                return true;
             }
-            api.creatAcct(args.get(1), args.get(2));
-            System.out.println(api.getResult());
         } else if(cmd.equals("delete")) {
             if(args.size() < 3) {
                 printError("Delete: not enough arguments");
-                return;
             } else if (args.size() > 3) {
                 printError("Delete: too many arguments");
-                return;
             }
             api.deleteAcct(args.get(1), args.get(2));
-            System.out.println(api.getResult());
+            return true;
         } else if (cmd.equalsIgnoreCase("accounts")) {
             api.getAccts();
-            System.out.print(api.getResult());
+            return true;
         } else if (cmd.equalsIgnoreCase("deposit")) {
             try {
                 api.deposit(args.get(1), args.get(2));
-                System.out.println(api.getResult());
+                return true;
             } catch (Exception e) {
                 if (e instanceof IndexOutOfBoundsException)
                     printError("Syntax error: too few arguments.");
@@ -125,22 +125,22 @@ public class CLIBank {
                 printError("Withdraw: too many arguments.");
             } else {
                 api.withdraw(args.get(1), args.get(2), args.get(3));
-                System.out.println(api.getResult());
+                return true;
             }
         } else if (cmd.equalsIgnoreCase("transactions")) {
             if (args.size() == 1) {
                 api.getTransactions();
-                System.out.println(api.getResult());
+                return true;
             } else if (args.size() == 2) {
                 api.getTransactions(Integer.parseInt(args.get(1)));
-                System.out.println(api.getResult());
+                return true;
             } else if (args.size() == 3) {
                 int stagedRows = Integer.parseInt(args.get(1));
                 if (stagedRows <= 1000) {
                     int rows = Integer.parseInt(args.get(2));
                     if (rows < 0) rows = 0;
                     api.getAcctTransactions(args.get(1), rows);
-                    System.out.print(api.getResult());
+                    return true;
                 }
             } else {
                 printError("Syntax error");
@@ -152,13 +152,14 @@ public class CLIBank {
                 printError("Too many arguments.");
             } else {
                 api.transfer(args.get(1), args.get(2), args.get(3));
-                System.out.println(api.getResult());
+                return true;
             }
         } else if(cmd.equalsIgnoreCase("help") || cmd.equals("?")) {
             System.out.println(helpTxt);
         } else {
             printError("Unrecognized command");
         }
+        return false;
     }
 
     protected static void interactive() {
@@ -184,8 +185,11 @@ public class CLIBank {
 
         while(true) {
             System.out.print(prompt);
+            System.out.flush();
             String line = sc.nextLine();
-            exec(Arrays.asList(line.split(" ")));
+            status = exec(Arrays.asList(line.split(" ")));
+            if(status && api.getResult() != null && !api.getResult().isEmpty())
+                System.out.print(api.getResult());
         }
     }
 

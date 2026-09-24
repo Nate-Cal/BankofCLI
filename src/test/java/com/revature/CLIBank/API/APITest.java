@@ -6,23 +6,47 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 public class APITest {
+    private final String charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    private String randomUname() {
+        StringBuilder uname = new StringBuilder("A");
+        for(int i = 0; i < 15; i++) {
+            uname.append(charset.charAt((int) (charset.length() * Math.random())));
+        }
+        return uname.toString();
+    }
+
+    private String randomPass() {
+        StringBuilder pw = new StringBuilder("Aa@");
+        for(int i = 0; i < 13; i++) {
+            pw.append(charset.charAt((int) (charset.length() * Math.random())));
+        }
+        return pw.toString();
+    }
 
     @Test
     public void login_fail_badcreds() {
         API api = new API();
-        /* Bad username, bad password that do not meet standads */
+        /* Bad username, bad password that do not meet standards */
         Assertions.assertFalse(api.login("username", "password"));
     }
 
     /**
      * Test login when there are credentials that pass the
      * requirements but do not exist within the database.
+     *
+     * This test randomly generates usernames and passwords.
+     * It is not absolutely guaranteed to work, but it does
+     * with a high probability.
+     *
      * @author Nicholas DiGirolamo
      */
     @Test
     public void login_fail_goodcreds() {
         API api = new API();
-        Assertions.assertFalse(api.login("Username", "Pa$$w0rdPa$$w0rd"));
+
+        api.login("Username", "Pa$$w0rdPa$$w0rd");
+        Assertions.assertFalse(api.login(randomUname(), randomPass()));
     }
 
     @Test
@@ -88,19 +112,21 @@ public class APITest {
     @Test
     public void registerTestPass() {
         API api = new API();
-        api.register("Username", "Pa$$w0rdPa$$w0rd");
-        Assertions.assertEquals("User " + "Username" + " successfully registered.",  api.getResult());
+        String uname = randomUname();
+        String pass = randomPass();
+        api.register(uname, pass);
+        Assertions.assertEquals("User " + uname + " successfully registered.",  api.getResult());
     }
 
     @Test
     public void usernameRepeat() {
         API api = new API();
-        String username = "A1aeouaoeu";
+        String username = randomUname();
 
-        api.register(username, "Pa$$w0rdPa$$w0rd");
+        api.register(username, randomPass());
         Assertions.assertEquals("User " + username + " successfully registered.", api.getResult());
 
-        api.register(username, "Abc123$%Abc123$%");
+        api.register(username, randomPass());
         Assertions.assertEquals("Username taken. Choose a different username.", api.getResult());
     }
 
