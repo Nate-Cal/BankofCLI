@@ -177,14 +177,14 @@ public class CLIBank {
                 status = login();
             }
             if(!status && api.getResult() != null) {
-                System.out.println(api.getResult());
-                System.out.println();
+                System.out.println(api.getResult() + "\n");
+                System.out.flush();
             }
 
         } while (!status);
 
         while(true) {
-            System.out.print(prompt);
+            System.out.print("\n" + prompt);
             System.out.flush();
             String line = sc.nextLine();
             status = exec(Arrays.asList(line.split(" ")));

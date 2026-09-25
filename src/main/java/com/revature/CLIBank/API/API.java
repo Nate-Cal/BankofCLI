@@ -319,6 +319,8 @@ public class API {
             long bal = ac.getBalance();
             sb.append(bal / 100);
             sb.append(".");
+            long cents = bal % 100;
+            if(cents < 10) sb.append(0);
             sb.append(bal % 100);
             sb.append("\n");
         }
