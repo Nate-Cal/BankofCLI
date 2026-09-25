@@ -28,3 +28,7 @@ If you are running the project for the first time, you will need to set up the `
         PASSWORD-KEY=1234567890123456
 6. Click 'OK', then 'Apply'.
 7. Select the `CLIBank` configuration and run the program.
+
+NOTE: This is no longer necessary to run the application, as the application now uses password 
+hashing. This was written for a previous implementation of the application that used password 
+encryption.

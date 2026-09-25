@@ -1,3 +1,8 @@
+/*
+This class is no longer used in this application. Before salted password hashing was implemented,
+the application used AES encryption to store passwords in the database.
+ */
+
 package com.revature.CLIBank.Utility;
 
 import javax.crypto.Cipher;
